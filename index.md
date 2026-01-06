@@ -216,7 +216,7 @@ Ideas for project language features:
 |          | 19  | Spring Break, no class |
 |          | 24  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
 |          | 26  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013) |
-| March    | 31  | [Compositional](https://plfa.github.io/Compositional/) (forgot to push record!) |
+|          | 31  | [Compositional](https://plfa.github.io/Compositional/) |
 | April    |  2  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
 |          |  7  | [Adequacy](https://plfa.github.io/Adequacy/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+8%2C+Adequacy+of+Denotational+Semantics+with+respect+to+Operational+Semantics/1_1eoqorgy) |
 |          |  9  | [ContextualEquivalence](https://plfa.github.io/ContextualEquivalence/) and [ScottNumeralsPlus](./ScottNumeralsPlus.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+13%2C+Contextual+Equivalence%2C+Addition+of+Scott+Numerals/1_xidyzfa5) |
