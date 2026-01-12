@@ -74,16 +74,16 @@ standard library.
 
 ```
 open import Data.Nat.Properties
-open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
-open import Relation.Binary.PropositionalEquality using (sym; cong; cong₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; cong₂)
+open Relation.Binary.PropositionalEquality.≡-Reasoning
 ```
 
 The Agda standard library module
-[Data.Nat.Properties](https://github.com/agda/agda-stdlib/blob/master/src/Data/Nat/Properties.agda)
+[Data.Nat.Properties](https://agda.github.io/agda-stdlib/v2.3/Data.Nat.Properties.html)
 includes proofs for many of the laws of algebra for natural numbers.
 Some of those laws refer to names, such as `RightIdentity`, that are
-defined in the module
-[Algebra.Definitions](https://github.com/agda/agda-stdlib/blob/master/src/Algebra/Definitions.agda).
+defined in the module 
+[Algebra.Definitions](https://agda.github.io/agda-stdlib/v2.3/Algebra.Definitions.html).
 
 ```
 _ : (x : ℕ) → (y : ℕ) → x + y + x ≡ 2 * x + y
@@ -964,14 +964,14 @@ With this view in mind, we prove that `rotate` is correct using some
 equations from the Agda standard library about `reverse` and `append`.
 
 ```
-open import Data.List.Properties using (reverse-++-commute; reverse-involutive)
+open import Data.List.Properties using (reverse-++; reverse-involutive)
 
 rotate-correct : ∀ {A : Set} {xs ys zs : List A} {k : ℕ}
    → splitAt k xs ≡ ⟨ ys , zs ⟩
    → rotate xs k ≡ zs ++ ys
 rotate-correct {A}{xs}{ys}{zs} sk rewrite sk =
   begin
-     reverse (reverse ys ++ reverse zs)   ≡⟨ cong reverse (sym (reverse-++-commute zs ys)) ⟩
+     reverse (reverse ys ++ reverse zs)   ≡⟨ cong reverse (sym (reverse-++ zs ys)) ⟩
      reverse (reverse (zs ++ ys))         ≡⟨ reverse-involutive (zs ++ ys) ⟩
      zs ++ ys
   ∎
