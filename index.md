@@ -21,7 +21,7 @@ Prof. Jeremy Siek, Luddy 3016, [jsiek@iu.edu](mailto:jsiek@iu.edu)
 
 ## Lectures
 
-Tuesday and Thursday at 2:20-3:35pm in WY 101.
+Tuesday and Thursday at 2:20-3:35pm in [Wylie Hall (WY)](https://maps.app.goo.gl/kjGca6i2n9KVYhiZ9) Room 101.
 
 
 ## Office Hours (in Luddy Hall 3016 or the neighboring 3014)
