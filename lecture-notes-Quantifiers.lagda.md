@@ -1,14 +1,11 @@
 ```
 module lecture-notes-Quantifiers where
-```
 
-```
 open import Data.Nat
 open import Data.Nat.Properties
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; subst; cong)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Empty using (⊥-elim)
-open import lecture-notes-Relations
 ```
 
 # Quantifiers
@@ -42,11 +39,11 @@ the appropriate type.
 The following shows how universals can distribute with disjunction.
 
 ```
-_ : ∀{P : Set}{Q R : P → Set}
-    → (∀ (x : P) → Q x)  ⊎  (∀ (x : P) → R x)
-    → ∀ (x : P) → Q x ⊎ R x
-_ = λ { (inj₁ ∀x:P,Qx) p → inj₁ (∀x:P,Qx p);
-        (inj₂ ∀x:P,Rx) p → inj₂ (∀x:P,Rx p) }
+∀-dist-⊎ : ∀ {P : Set} {Q R : P → Set}
+    → (∀ (x : P) → Q x) ⊎ (∀ (x : P) → R x)
+    → (∀ (x : P) → Q x ⊎ R x)
+∀-dist-⊎ (inj₁ ∀x:P→Qx) x = inj₁ (∀x:P→Qx x)
+∀-dist-⊎ (inj₂ ∀x:P→Rx) x = inj₂ (∀x:P→Rx x)
 ```
 
 Existential quantification is represented using dependent product types.
@@ -74,7 +71,7 @@ formula involving the first part, and the value in the second part of
 the pair is a proof of that formula.
 
 ```
-open import Data.Product using (Σ-syntax)
+open import Data.Product using (Σ-syntax; ∃-syntax)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 ```
 
@@ -158,7 +155,9 @@ following proof by induction shows that `m div n` implies
 that there exists some `k` such that `k * m ≡ n`.
 
 ```
-mdivn→k*m≡n : (m n : ℕ) → m div n → Σ[ k ∈ ℕ ] k * m ≡ n
+open import lecture-notes-Relations using (_div_; div-refl; div-step)
+
+mdivn→k*m≡n : (m n : ℕ) → m div n → ∃[ k ] k * m ≡ n
 mdivn→k*m≡n m .m (div-refl .m x) = ⟨ 1 , +-identityʳ m ⟩
 mdivn→k*m≡n m .(m + n) (div-step n .m mn)
     with mdivn→k*m≡n m n mn
@@ -189,11 +188,43 @@ Going in the other direction, if we know that `n ≡ k * m`, then `m div n`
 ```
 m-div-k*m : (k m : ℕ) → m ≢ 0 → k ≢ 0 → m div (k * m)
 m-div-k*m zero m m≢0 k≢0 = ⊥-elim (k≢0 refl)
-m-div-k*m (suc zero) m m≢0 k≢0
+m-div-k*m (suc zero) m m≢0 _
     rewrite +-identityʳ m = div-refl m m≢0
-m-div-k*m (suc (suc k)) m m≢0 k≢0 =
+m-div-k*m (suc (suc k)) m m≢0 _ =
     let IH = m-div-k*m (suc k) m m≢0 λ () in
     div-step (m + k * m) m IH
+
+open import Relation.Nullary.Negation using (contradiction)
+
+_div′_ : ℕ → ℕ → Set
+m div′ n = m ≢ 0 × ∃[ k ] (k ≢ 0 × k * m ≡ n)
+
+pattern ⟨_,_,_,_⟩ x y z w = ⟨ x , ⟨ y , ⟨ z , w ⟩ ⟩ ⟩
+
+div′→div : ∀ (m n : ℕ) → m div′ n → m div n
+div′→div m n ⟨ m≠0 , 0 , k≠0 , refl ⟩ = contradiction refl k≠0
+div′→div m n ⟨ m≠0 , suc k , _ , k*m=n ⟩ rewrite sym k*m=n =
+   m-div-k*m (1 + k) m m≠0 λ ()
+
+div→div′ : ∀ (m n : ℕ) → m div n → m div′ n
+div→div′ m n (div-refl .m m≠0) = ⟨ m≠0 , 1 , (λ ()) , +-identityʳ m ⟩
+div→div′ m m+n (div-step n .m mdivn)
+  with div→div′ m n mdivn
+... | ⟨ m≠0 , k , k≠0 , km=n ⟩ =
+  ⟨ m≠0 , 1 + k , (λ ()) , cong (m +_) km=n ⟩
+
+infix 0 _⇔_
+
+record _⇔_ (A B : Set) : Set where
+  field
+    to   : A → B
+    from : B → A
+
+div⇔div′ : ∀ {m n} → m div n ⇔ m div′ n
+div⇔div′ {m} {n} = record {
+    to = div→div′ m n ;
+    from = div′→div m n
+  }
 ```
 
 
