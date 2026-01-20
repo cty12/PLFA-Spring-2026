@@ -34,7 +34,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
 1. January 20, Exercises `Bin` (in [Naturals](https://plfa.github.io/Naturals/)) and
   `Bin-laws` (in [Induction](https://plfa.github.io/Induction/)).
   
-2. Exercises `Bin-predicates` (in [Relations](https://plfa.github.io/Relations/)) and
+2. January 27, Exercises `Bin-predicates` (in [Relations](https://plfa.github.io/Relations/)) and
   `Bin-embedding` (in [Isomorphism](https://plfa.github.io/Isomorphism/)).
 
 3. Exercises
