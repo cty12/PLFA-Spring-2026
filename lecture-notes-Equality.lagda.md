@@ -15,38 +15,55 @@ open import lecture-notes-Relations
 It has one constructor named `refl` that says anything is equal to
 itself.
 
+infix 4 _≡_
+data _≡_ {a} {A : Set a} (x : A) : A → Set a where
+  refl : x ≡ x
+
 ## `≡` is an equivalence relation and a congruence
 
 ```
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
 ```
 
-Example of `refl`:
+Examples of `refl`:
 
 ```
-0≡0+0 : 0 ≡ 0 + 0
-0≡0+0 = refl
+0≡0 : 0 ≡ 0
+0≡0 = refl
+
+_ : ∀ x → 0 + x ≡ x
+_ = λ x → refl
+
+x+0=x : ∀ x → x + 0 ≡ x
+x+0=x = λ x → +-identityʳ x
 ```
 
 Example of `sym`:
 
 ```
-0+0≡0 : 0 + 0 ≡ 0
-0+0≡0 = sym 0≡0+0
+x=x+0 : ∀ x → x ≡ x + 0
+x=x+0 = λ x → sym (x+0=x x)
 ```
 
 Example of `cong`:
 
 ```
-0+0≡0+0+0 : 0 + 0 ≡ 0 + (0 + 0)
-0+0≡0+0+0 = cong (λ □ → 0 + □) 0≡0+0
+0+x+x=x+0+x : ∀ x → (0 + x) + x ≡ (x + 0) + x
+0+x+x=x+0+x = λ x → cong (λ □ → □ + x) (x=x+0 x)
 ```
 
 Example of `trans`:
 
 ```
-0≡0+0+0 : 0 ≡ 0 + 0 + 0
-0≡0+0+0 = trans 0≡0+0 0+0≡0+0+0
+_ : ∀ x → (0 + x) + x ≡ 2 * x
+_ = λ x →
+    let eq1 : (0 + x) + x ≡ (x + 0) + x
+        eq1 = 0+x+x=x+0+x x in
+    let eq2 : (x + 0) + x ≡ x + (0 + x)
+        eq2 = +-assoc x 0 x in
+    let eq3 : x + (0 + x) ≡ 2 * x
+        eq3 = cong (λ □ → x + □) (x=x+0 x) in
+    trans eq1 (trans eq2 eq3)
 ```
 
 ## `subst`
@@ -67,13 +84,14 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning
 ```
 
 ```
-_ : 0 ≡ 0 + 0 + 0
-_ =
-  begin
-  0            ≡⟨ 0≡0+0 ⟩
-  0 + 0        ≡⟨ 0+0≡0+0+0 ⟩
-  0 + 0 + 0
-  ∎
+_ : ∀ x → (0 + x) + x ≡ 2 * x
+_ = λ x → 
+    begin
+    (0 + x) + x      ≡⟨ 0+x+x=x+0+x x ⟩
+    (x + 0) + x      ≡⟨ +-assoc x 0 x ⟩
+    x + (0 + x)      ≡⟨ cong (λ □ → x + □) (x=x+0 x) ⟩
+    2 * x
+    ∎
 ```
 
 ## Rewriting
