@@ -192,8 +192,8 @@ Ideas for project language features:
 
 | Month    | Day | Topic    | Notes |
 | -------- | --- | -------- | ---- |
-| January  | 13  | [Naturals](https://plfa.github.io/Naturals/) & [Induction](https://plfa.github.io/Induction/) | [link](./lecture-notes-Naturals-Induction.lagda.md?raw=true) |
-|          | 15  | [Relations](https://plfa.github.io/Relations/) | [link](./lecture-notes-Relations.lagda.md?raw=true) |
+| January  | 13  | [Naturals](https://plfa.github.io/Naturals/) & [Induction](https://plfa.github.io/Induction/) | [link](./lecture-notes-Naturals-Induction.lagda.md) |
+|          | 15  | [Relations](https://plfa.github.io/Relations/) | [link](./lecture-notes-Relations.lagda.md) |
 |          | 20  | [Equality](https://plfa.github.io/Equality/) & [Isomorphism](https://plfa.github.io/Isomorphism/) (unusual day, regular time) |
 | 	   | 22  | [Connectives](https://plfa.github.io/Connectives/) & [Negation](https://plfa.github.io/Negation/) |
 |	   | 27  | [Quantifiers](https://plfa.github.io/Quantifiers/) & [Decidable](https://plfa.github.io/Decidable/) |
