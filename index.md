@@ -194,8 +194,8 @@ Ideas for project language features:
 | -------- | --- | -------- | ---- |
 | January  | 13  | [Naturals](https://plfa.github.io/Naturals/) & [Induction](https://plfa.github.io/Induction/) | [link](./lecture-notes-Naturals-Induction.lagda.md) |
 |          | 15  | [Relations](https://plfa.github.io/Relations/) | [link](./lecture-notes-Relations.lagda.md) |
-|          | 20  | [Equality](https://plfa.github.io/Equality/) & [Isomorphism](https://plfa.github.io/Isomorphism/) |
-| 	   | 22  | [Connectives](https://plfa.github.io/Connectives/) & [Negation](https://plfa.github.io/Negation/) |
+|          | 20  | [Equality](https://plfa.github.io/Equality/) & [Isomorphism](https://plfa.github.io/Isomorphism/) | [link](./lecture-notes-Equality.lagda.md) |
+| 	   | 22  | [Connectives](https://plfa.github.io/Connectives/) & [Negation](https://plfa.github.io/Negation/) | [link](./lecture-notes-Connectives.lagda.md) |
 |	   | 27  | [Quantifiers](https://plfa.github.io/Quantifiers/) & [Decidable](https://plfa.github.io/Decidable/) |
 |          | 29  | [Lists](https://plfa.github.io/Lists/) and higher-order functions |
 | February | 3  | [Lambda](https://plfa.github.io/Lambda/) the Simply Typed Lambda Calculus |
