@@ -1,6 +1,6 @@
-# B629 Mechanized Proofs for PL Metatheory
+<!-- # B629 Mechanized Proofs for PL Metatheory -->
 
-Indiana University, Spring 2026
+**Indiana University, Spring 2026**
 
 In this course we learn how to write mechanized proofs in Agda of
 theorems about programming languages. The course will use the online
