@@ -37,7 +37,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
 2. January 27, Exercises `Bin-predicates` (in [Relations](https://plfa.github.io/Relations/)) and
   `Bin-embedding` (in [Isomorphism](https://plfa.github.io/Isomorphism/)).
 
-3. Exercises
+3. February 3, Exercises
    `⊎-weak-×` (in [Connectives](https://plfa.github.io/Connectives/)), 
    `⊎-dual-×` (in [Negation](https://plfa.github.io/Negation/)),
    `∃-distrib-⊎`,
