@@ -199,7 +199,7 @@ Ideas for project language features:
 | 	   | 22  | [Connectives](https://plfa.github.io/Connectives/) & [Negation](https://plfa.github.io/Negation/) | [link](./lecture-notes-Connectives.lagda.md) |
 |	   | 27  | [Quantifiers](https://plfa.github.io/Quantifiers/) & [Decidable](https://plfa.github.io/Decidable/) | [link](./lecture-notes-Quantifiers.lagda.md)
 |          | 29  | [Lists](https://plfa.github.io/Lists/) and higher-order functions | [link](./lecture-notes-Lists.lagda.md)
-| February | 3  | [Lambda](https://plfa.github.io/Lambda/) the Simply Typed Lambda Calculus |
+| February | 3  | [Lambda](https://plfa.github.io/Lambda/) the Simply Typed Lambda Calculus | [link](./lecture-notes-Lambda.lagda.md)
 |          | 5 | [Properties](https://plfa.github.io/Properties/) such as type safety |
 |          | 10 | [DeBruijn](https://plfa.github.io/DeBruijn/) representation of variables |
 |          | 12 | [More](https://plfa.github.io/More/) constructs: numbers, let, products (pairs), sums, unit, empty, lists |
