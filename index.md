@@ -45,14 +45,14 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
    `∃¬-implies-¬∀`,
    `Bin-isomorphism` (in [Quantifiers](https://plfa.github.io/Quantifiers/)).
 
-4. Exercises 
+4. February 10, Exercises 
    `_<?_`, 
    `iff-erasure` (in [Decidable](https://plfa.github.io/Decidable/)),
    `foldr-++`,
    `foldr-∷`, and
    `Any-++-⇔` (in [Lists](https://plfa.github.io/Lists/)).
 
-5. Exercises
+5. February 17, Exercises
    `mul`,
    `—↠≲—↠′`, and
    `⊢mul`
@@ -62,7 +62,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
    `unstuck`
    (in [Properties](https://plfa.github.io/Properties/)).
 
-6. Formalize the STLC using the extrinsic
+6. February 24, Formalize the STLC using the extrinsic
    style, as in [Lambda](https://plfa.github.io/Lambda/),
    but using de Bruijn indices to represent variables,
    as in [DeBruijn](https://plfa.github.io/DeBruijn/).
