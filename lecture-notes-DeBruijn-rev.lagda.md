@@ -1,3 +1,7 @@
+```
+module lecture-notes-DeBruijn-rev where
+```
+
 # STLC using de Bruijn indices and intrinsically typed terms
 
 ## Imports
