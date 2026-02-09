@@ -164,7 +164,7 @@ Let's do the inner application first, of
     —→
       4
 
-Is that the correct answer?
+Is that the correct answer? No!
 
 Would we get the same answer if we did the outer application first?
 
@@ -178,7 +178,7 @@ Would we get the same answer if we did the outer application first?
     —→
       3
 
-No!
+Is that the correct answer? Yes!
 
 Would we get the same answer if we renamed the inner x to z?
 
@@ -194,7 +194,7 @@ Would we get the same answer if we renamed the inner x to z?
     —→
       3
 
-No!
+Is that the correct answer? Yes!
 
 In the STLC, we'll do outer applications first, which avoids the
 problem of free-variable capture.
@@ -286,8 +286,8 @@ data _—→_ : Term → Term → Set where
     → case `suc V [zero⇒ M |suc x ⇒ N ] —→ N [ x := V ]
 
   β-μ : ∀ {x M}
-      ------------------------------
-    → μ x ⇒ M —→ M [ x := μ x ⇒ M ]
+      --------------------------------
+    → μ x ⇒ M —→ M [ x := (μ x ⇒ M) ]
 ```
 
 We define the following relation for taking multiple reduction steps.
@@ -455,7 +455,7 @@ canonical form.
 canonical : ∀ {V A}
   → ∅ ⊢ V ⦂ A
   → Value V
-    -----------
+    ---------------
   → Canonical V ⦂ A
 canonical (⊢` ())          ()
 canonical (⊢ƛ ⊢N)          V-ƛ         =  C-ƛ ⊢N

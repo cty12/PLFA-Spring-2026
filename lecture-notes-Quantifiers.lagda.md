@@ -3,7 +3,8 @@ module lecture-notes-Quantifiers where
 
 open import Data.Nat
 open import Data.Nat.Properties
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; subst; cong)
+open import Relation.Binary.PropositionalEquality
+   using (_≡_; _≢_; refl; sym; subst; cong)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Empty using (⊥; ⊥-elim)
 ```
@@ -246,6 +247,20 @@ In some sense, such a function is better than going with a data type
 because it also serves as a decision procedure. However, for some
 relations it is difficult or even impossible to come up with such a
 function.
+
+However, one cannot use expressions of type `Bool` directly in
+formulas because formulas in Agda must have type `Set`. However,
+there is a function in `Data.Bool` named `T` that converts
+from `Bool` to `Set`. But it is inconvenient to use `T`.
+
+```
+open import Data.Unit using (tt)
+open import Data.Bool using (T)
+
+less-eq-refl : ∀ x → T (less-eq x x)
+less-eq-refl zero = tt
+less-eq-refl (suc x) = less-eq-refl x
+```
 
 Sometimes its nice to link your decision procedure to the relation
 defined by a data type, building the correctness of your decision

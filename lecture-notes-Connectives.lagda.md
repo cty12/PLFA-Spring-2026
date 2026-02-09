@@ -46,8 +46,8 @@ _ = tt
 
 Implication is the function type.
 
-So its constructor is lambda abstraction
-and the eliminator is application.
+So its introduction form is lambda abstraction
+and the elimination form is application.
 
 ```
 _ : P → P

@@ -26,32 +26,33 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
 
 ## Office Hours (in Luddy Hall 3016 or the neighboring 3014)
 
-* TBD
+* Mondays 2-3pm
+* Fridays 1:30-2:30pm
 
 
 ## Assignments (tentative)
 
-1. January 20, Exercises `Bin` (in [Naturals](https://plfa.github.io/Naturals/)) and
+* January 20, Exercises `Bin` (in [Naturals](https://plfa.github.io/Naturals/)) and
   `Bin-laws` (in [Induction](https://plfa.github.io/Induction/)).
   
-2. January 27, Exercises `Bin-predicates` (in [Relations](https://plfa.github.io/Relations/)) and
+* January 27, Exercises `Bin-predicates` (in [Relations](https://plfa.github.io/Relations/)) and
   `Bin-embedding` (in [Isomorphism](https://plfa.github.io/Isomorphism/)).
 
-3. Exercises
+* February 3, Exercises
    `⊎-weak-×` (in [Connectives](https://plfa.github.io/Connectives/)), 
    `⊎-dual-×` (in [Negation](https://plfa.github.io/Negation/)),
    `∃-distrib-⊎`,
    `∃¬-implies-¬∀`,
    `Bin-isomorphism` (in [Quantifiers](https://plfa.github.io/Quantifiers/)).
 
-4. Exercises 
+* February 10, Exercises 
    `_<?_`, 
    `iff-erasure` (in [Decidable](https://plfa.github.io/Decidable/)),
    `foldr-++`,
    `foldr-∷`, and
    `Any-++-⇔` (in [Lists](https://plfa.github.io/Lists/)).
 
-5. Exercises
+* February 17, Exercises
    `mul`,
    `—↠≲—↠′`, and
    `⊢mul`
@@ -61,7 +62,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
    `unstuck`
    (in [Properties](https://plfa.github.io/Properties/)).
 
-6. Formalize the STLC using the extrinsic
+* February 24, Formalize the STLC using the extrinsic
    style, as in [Lambda](https://plfa.github.io/Lambda/),
    but using de Bruijn indices to represent variables,
    as in [DeBruijn](https://plfa.github.io/DeBruijn/).
@@ -99,7 +100,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
    from your formalization of the STLC, instead
    including a unit type.
 
-7. Termination and Bidirectional Typing:
+* Termination and Bidirectional Typing:
 
     * Extend the termination proof for STLC
       to include products and sums, as they appear
@@ -110,15 +111,15 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
     * Extend the bidirectional type rules, `synthesize`, and `inherit`
       to handle products and sums.
 
-8. Do the `variants` exercise in
+* Do the `variants` exercise in
    [Subtyping and Records](./lecture-notes-Subtyping.lagda.md).
 
-9. Do the `products` exercise in
+* Do the `products` exercise in
    [Bisimulation](https://plfa.github.io/Bisimulation/)
    and the `big-alt-implies-multi` exercise
    in [BigStep](https://plfa.github.io/BigStep/).
 
-10. Project Description Due.
+* Project Description Due.
     Write 1 page describing your project.  The description should
 	include a list of the formal artifacts (definitions, theorems)
 	that you plan to turn in.
@@ -196,9 +197,9 @@ Ideas for project language features:
 |          | 15  | [Relations](https://plfa.github.io/Relations/) | [link](./lecture-notes-Relations.lagda.md) |
 |          | 20  | [Equality](https://plfa.github.io/Equality/) & [Isomorphism](https://plfa.github.io/Isomorphism/) | [link](./lecture-notes-Equality.lagda.md) |
 | 	   | 22  | [Connectives](https://plfa.github.io/Connectives/) & [Negation](https://plfa.github.io/Negation/) | [link](./lecture-notes-Connectives.lagda.md) |
-|	   | 27  | [Quantifiers](https://plfa.github.io/Quantifiers/) & [Decidable](https://plfa.github.io/Decidable/) |
-|          | 29  | [Lists](https://plfa.github.io/Lists/) and higher-order functions |
-| February | 3  | [Lambda](https://plfa.github.io/Lambda/) the Simply Typed Lambda Calculus |
+|	   | 27  | [Quantifiers](https://plfa.github.io/Quantifiers/) & [Decidable](https://plfa.github.io/Decidable/) | [link](./lecture-notes-Quantifiers.lagda.md)
+|          | 29  | [Lists](https://plfa.github.io/Lists/) and higher-order functions | [link](./lecture-notes-Lists.lagda.md)
+| February | 3  | [Lambda](https://plfa.github.io/Lambda/) the Simply Typed Lambda Calculus | [link](./lecture-notes-Lambda.lagda.md)
 |          | 5 | [Properties](https://plfa.github.io/Properties/) such as type safety |
 |          | 10 | [DeBruijn](https://plfa.github.io/DeBruijn/) representation of variables |
 |          | 12 | [More](https://plfa.github.io/More/) constructs: numbers, let, products (pairs), sums, unit, empty, lists |
