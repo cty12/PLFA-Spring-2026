@@ -1,5 +1,5 @@
 ```
-module lecture-notes-DeBruijn-rev where
+module Feb10 where
 ```
 
 # STLC using de Bruijn indices and intrinsically typed terms
@@ -22,7 +22,9 @@ module Intro where
   open import lecture-notes-Lambda using (Term; ƛ_⇒_; _·_; `_; _⊢_⦂_; ⊢ƛ; ⊢`; ∅; _⇒_)
                                  renaming (Z to here; S to there)
 
-  -- The Church encoding of two: λf. λx. f (f x)
+  -- The Church encoding of two:
+  --                 (names)  λf. λx. f (f x)
+  --             (de Bruijn)  λ.  λ.  1 (1 0)
   twoᶜ : Term
   twoᶜ = ƛ "f" ⇒ ƛ "x" ⇒ ` "f" · (` "f" · ` "x")
 
@@ -115,27 +117,27 @@ data _⊢_ : Context → Type → Set where
     → Γ ⊢ `ℕ
 
 -- λf. λx. f (f x)
-_ : ∀ {A : Type} → ∅ ⊢ (A ⇒ A) ⇒ A ⇒ A
-_ = ƛ (ƛ ` ∋f · (` ∋f · ` ∋x))
-  where
-  ∋f = S Z
-  ∋x = Z
+⊢twoᶜ′ : ∀ {A : Type} → ∅ ⊢ (A ⇒ A) ⇒ A ⇒ A
+⊢twoᶜ′ = ƛ (ƛ ` (S Z) · (` (S Z) · ` Z))
 ```
 
 ## Renaming
 
 ```
-ext : ∀ {Γ Δ}
-  → (∀ {A} →       Γ ∋ A →     Δ ∋ A)
+_→ʳ_ : Context → Context → Set
+Γ →ʳ Δ = ∀ {A} → Γ ∋ A → Δ ∋ A
+
+ext : ∀ {Γ Δ A}
+  → Γ →ʳ Δ
     ---------------------------------
-  → (∀ {B A} → Γ , B ∋ A → Δ , B ∋ A)
+  → (Γ , A) →ʳ (Δ , A)
 ext ρ Z      =  Z
 ext ρ (S x)  =  S (ρ x)
 ```
 
 ```
 rename : ∀ {Γ Δ A}
-  → (∀ {A} → Γ ∋ A → Δ ∋ A)
+  → (ρ : Γ →ʳ Δ)
   → Γ ⊢ A
     ------------------
   → Δ ⊢ A
@@ -146,6 +148,11 @@ rename ρ (`zero)        =  `zero
 ```
 
 ## Simultaneous Substitution
+
+```
+_→ˢ_ : Context → Context → Set
+Γ →ˢ Δ = ∀ {A} → Γ ∋ A → Δ ⊢ A
+```
 
 This definition of substitution works even with full beta.
 
@@ -169,39 +176,44 @@ x    σ(x)           x   σ′(x)
 exts(σ) = σ′
 -}
 
-exts : ∀ {Γ Δ}
-  → (∀ {A} →       Γ ∋ A →     Δ ⊢ A)
-    --------------------------------------
-  → (∀ {B} → ∀{C} → Γ , B ∋ C → Δ , B ⊢ C)
-exts σ Z      =  ` Z
-exts σ (S x)  =  rename S_ (σ x)
-```
+⇑_ : ∀ {Γ A B} → Γ ⊢ A → Γ , B ⊢ A
+⇑ M = rename S_ M
+-- S_ : Γ ∋ A → Γ , B ∋ A
 
-```
+exts : ∀ {Γ Δ A}
+  → Γ →ˢ Δ
+    ---------------------------------
+  → (Γ , A) →ˢ (Δ , A)
+exts σ Z      =  ` Z
+exts σ (S x)  =  ⇑ σ x   -- σ′ = ⇑ ∘ σ ∘ sub1
+
 subst : ∀ {Γ Δ A}
-  → (σ : ∀ {A} → Γ ∋ A → Δ ⊢ A)
+  → (σ : Γ →ˢ Δ)
   → Γ ⊢ A
     ---------------
   → Δ ⊢ A
-subst σ (` k)          =  σ k
-subst σ (ƛ N)          =  ƛ (subst (exts σ) N)
-subst σ (L · M)        =  (subst σ L) · (subst σ M)
-subst σ (`zero)        =  `zero
+
+subst σ (` x) = σ x
+subst σ (ƛ M) = ƛ subst (exts σ) M
+subst σ (M · N) = subst σ M · subst σ N
+subst σ `zero = `zero
 ```
 
 ## Single substitution
 
 ```
+
 _[_] : ∀ {Γ A B}
         → Γ , B ⊢ A
         → Γ ⊢ B
           ---------
         → Γ ⊢ A
-_[_] {Γ} {A} {B} N M = subst σ N
+_[_] {Γ} {A} {B} N M = subst σ₀ N
   where
-  σ : ∀ {A} → Γ , B ∋ A → Γ ⊢ A
-  σ Z      =  M
-  σ (S x)  =  ` x
+  σ₀ : (Γ , B) →ˢ Γ
+  σ₀ Z = M
+  σ₀ (S x) = ` x
+
 ```
 
 ## Values
@@ -227,18 +239,18 @@ data _—→_ : ∀ {Γ A} → (Γ ⊢ A) → (Γ ⊢ A) → Set where
 
   ξ-·₁ : ∀ {Γ A B} {L L′ : Γ ⊢ A ⇒ B} {M : Γ ⊢ A}
     → L —→ L′
-      ---------------
+      ---------------------
     → L · M —→ L′ · M
 
   ξ-·₂ : ∀ {Γ A B} {V : Γ ⊢ A ⇒ B} {M M′ : Γ ⊢ A}
     → Value V
     → M —→ M′
-      ---------------
+      ---------------------
     → V · M —→ V · M′
 
   β-ƛ : ∀ {Γ A B} {N : Γ , A ⊢ B} {W : Γ ⊢ A}
     → Value W
-      --------------------
+      ------------------------
     → (ƛ N) · W —→ N [ W ]
 ```
 
@@ -246,7 +258,6 @@ data _—→_ : ∀ {Γ A} → (Γ ⊢ A) → (Γ ⊢ A) → Set where
 
 ```
 infix  2 _—↠_
-infix  1 begin_
 infixr 2 _—→⟨_⟩_
 infix  3 _∎
 
@@ -262,15 +273,14 @@ data _—↠_ : ∀ {Γ A} → (Γ ⊢ A) → (Γ ⊢ A) → Set where
       ------
     → L —↠ N
 
-begin_ : ∀ {Γ A} {M N : Γ ⊢ A}
-  → M —↠ N
-    ------
-  → M —↠ N
-begin M—↠N = M—↠N
 ```
 
 ```
-—↠-trans : ∀{Γ}{A}{M N L : Γ ⊢ A} → M —↠ N → N —↠ L → M —↠ L
+—↠-trans : ∀{Γ} {A} {M N L : Γ ⊢ A}
+  → M —↠ N
+  → N —↠ L
+    ---------------
+  → M —↠ L
 —↠-trans (M ∎) N—↠L = N—↠L
 —↠-trans (L —→⟨ L—→M ⟩ M—↠N) N—↠L =
   let IH = —↠-trans M—↠N N—↠L in
@@ -347,7 +357,7 @@ Gas = ℕ
 eval : ∀ {A}
   → Gas
   → (L : ∅ ⊢ A)
-    -----------
+    ------------
   → Steps L
 eval zero    L                =  steps (L ∎) out-of-gas
 eval (suc m) L
@@ -356,4 +366,15 @@ eval (suc m) L
 ... | step {M} L—→M
         with eval m M
 ...     | steps M—↠N fin    =  steps (L —→⟨ L—→M ⟩ M—↠N) fin
+
+-- example: evaluate (λf. f 0) (λx. x)
+⊢L : ∅ ⊢ `ℕ
+⊢L = (ƛ ` Z · `zero) · (ƛ ` Z)
+
+_ : eval 42 ⊢L ≡
+      steps (_ —→⟨ β-ƛ V-ƛ ⟩
+             _ —→⟨ β-ƛ V-zero ⟩
+             _ ∎)    -- reduction steps
+      (done V-zero)  -- result
+_ = refl
 ```
