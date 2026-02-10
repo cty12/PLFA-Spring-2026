@@ -120,7 +120,7 @@ data _⊢_ : Context → Type → Set where
 ext : ∀ {Γ Δ}
   → (∀ {A} →       Γ ∋ A →     Δ ∋ A)
     ---------------------------------
-  → (∀ {A B} → Γ , B ∋ A → Δ , B ∋ A)
+  → (∀ {B A} → Γ , B ∋ A → Δ , B ∋ A)
 ext ρ Z      =  Z
 ext ρ (S x)  =  S (ρ x)
 ```
@@ -161,8 +161,8 @@ This definition of substitution works even with full beta.
 ```
 exts : ∀ {Γ Δ}
   → (∀ {A} →       Γ ∋ A →     Δ ⊢ A)
-    ---------------------------------
-  → (∀ {A B} → Γ , B ∋ A → Δ , B ⊢ A)
+    --------------------------------------
+  → (∀ {B} → ∀{C} → Γ , B ∋ C → Δ , B ⊢ C)
 exts σ Z      =  ` Z
 exts σ (S x)  =  rename S_ (σ x)
 ```
