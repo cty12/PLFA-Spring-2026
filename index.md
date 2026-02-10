@@ -202,27 +202,27 @@ Ideas for project language features:
 | February | 3  | [Lambda](https://plfa.github.io/Lambda/) the Simply Typed Lambda Calculus | [link](./lecture-notes-Lambda.lagda.md)
 |          | 5 | [Properties](https://plfa.github.io/Properties/) such as type safety |
 |          | 10 | [DeBruijn](https://plfa.github.io/DeBruijn/) representation of variables |
-|          | 12 | [More](https://plfa.github.io/More/) constructs: numbers, let, products (pairs), sums, unit, empty, lists |
+|          | 12 | [Substitution](./lecture-notes-Substitution.lagda.md) |
 |          | 17 | [STLC Termination via Logical Relations](./STLC-Termination.lagda.md) |
-|          | 19 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference |
-|          | 24 | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) |
-|          | 26  | [Bisimulation](https://plfa.github.io/Bisimulation/) |
-|  March   | 3  | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus |
-|          | 5 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus |
-|          | 10 | [BigStep](https://plfa.github.io/BigStep/) Call-by-name Evaluation of the Lambda Calculus |
+|          | 19 | [More](https://plfa.github.io/More/) constructs: numbers, let, products (pairs), sums, unit, empty, lists |
+|          | 24 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference |
+|          | 26  | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) |
+|  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) |
+|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus |
+|          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus |
 |          | 12  | Spring Break, no class |
 |          | 17  | Spring Break, no class |
-|          | 19  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
-|          | 24  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013) |
-|          | 26  | [Compositional](https://plfa.github.io/Compositional/) |
-|          | 31  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
-| April    |  2  | [Adequacy](https://plfa.github.io/Adequacy/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+8%2C+Adequacy+of+Denotational+Semantics+with+respect+to+Operational+Semantics/1_1eoqorgy) |
-|          |  7  | [ContextualEquivalence](https://plfa.github.io/ContextualEquivalence/) and [ScottNumeralsPlus](./ScottNumeralsPlus.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+13%2C+Contextual+Equivalence%2C+Addition+of+Scott+Numerals/1_xidyzfa5) |
-|          |  9  | [Unification](./Unification.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+15A+Scott+Numerals+continuedB+Unification/1_s9t5bm7r) |
-|          | 14  | [Unification](./Unification.lagda.md) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+20A+Unification+continued/1_s965cxmw) |
-|          | 16  | [TypeInference](./TypeInference.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+22A+Type+Inference/1_dzkr4hhs) |
-|          | 21  | [Gradual Typing](./GradualTyping.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd) |
-|          | 23  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) |
-|          | 28  | TBD
+|          | 19  | [BigStep](https://plfa.github.io/BigStep/) Call-by-name Evaluation of the Lambda Calculus  |
+|          | 24  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
+|          | 26  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
+|          | 31  | [Compositional](https://plfa.github.io/Compositional/)  |
+| April    |  2  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
+|          |  7  | [Adequacy](https://plfa.github.io/Adequacy/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+8%2C+Adequacy+of+Denotational+Semantics+with+respect+to+Operational+Semantics/1_1eoqorgy) |
+|          |  9  | [ContextualEquivalence](https://plfa.github.io/ContextualEquivalence/) and [ScottNumeralsPlus](./ScottNumeralsPlus.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+13%2C+Contextual+Equivalence%2C+Addition+of+Scott+Numerals/1_xidyzfa5)|
+|          | 14  | [Unification](./Unification.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+15A+Scott+Numerals+continuedB+Unification/1_s9t5bm7r)  |
+|          | 16  | [Unification](./Unification.lagda.md) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+20A+Unification+continued/1_s965cxmw) |
+|          | 21  | [TypeInference](./TypeInference.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+22A+Type+Inference/1_dzkr4hhs) |
+|          | 23  | [Gradual Typing](./GradualTyping.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd) |
+|          | 28  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) 
 |          | 30  | TBD
 
