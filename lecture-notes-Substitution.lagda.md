@@ -206,7 +206,7 @@ id : ∀{Γ} → Γ →ˢ Γ
 id x = ` x
 ```
 
-The `↑` substitution is the stream (` 0), (` 1), (` 2), ...
+The `↑` substitution is the stream 0, 1, 2, ...
 
 ```
 ↑ : ∀{Γ A} → Γ →ˢ (Γ , A)
