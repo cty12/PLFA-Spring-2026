@@ -594,11 +594,15 @@ exts-sub-cons : ∀{Γ}{Δ}{A}{B} (σ : Γ →ˢ Δ) (N : Γ , A ⊢ B) (V : Δ 
 exts-sub-cons {Γ} σ N V = refl
 ```
 
-**Exercise:** (recommended) write down a detailed proof of the hard part of `sub-ren`:
+## Exercise `exts-⨟-ext` (recommended)
+
+Write a detailed proof of the hard part of `sub-ren`:
 
     (exts σ) ⨟ ren (ext ρ)  ≡  exts (σ ⨟ ren ρ)
 
-**Exercise:** (stretch) write down a detailed proof of the hard part of `sub-sub`:
+## Exercise `exts-⨟-exts` (stretch)
+
+Write a detailed proof of the hard part of `sub-sub`:
 
            exts σ ⨟ exts τ  ≡ exts (σ ⨟ τ)
 
