@@ -9,7 +9,6 @@ module STLC-Termination where
 ## Imports
 
 ```
-import Syntax
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.List using (List; []; _∷_)
 open import Data.Maybe
