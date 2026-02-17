@@ -129,9 +129,9 @@ according to type `A`, that is, `𝒱 A V`.
 
 ```
 𝒱 `ℕ `zero = ⊤
-𝒱 `ℕ _ = ⊥
+𝒱 `ℕ (L · M) = ⊥
 𝒱 (A ⇒ B) (ƛ N) = ∀ (V : ∅ ⊢ A) → 𝒱 A V → ℰ B (N [ V ])
-𝒱 (A ⇒ B) _ = ⊥
+𝒱 (A ⇒ B) (L · M) = ⊥
 ```
 
 The well-behaved values (𝒱) are indeed values.
