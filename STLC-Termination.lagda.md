@@ -130,11 +130,11 @@ according to type `A`, that is, `𝒱 A V`.
 ```
 𝒱 `ℕ `zero = ⊤
 𝒱 `ℕ _ = ⊥
-𝒱 (A ⇒ B) (ƛ N) = ∀ {V : ∅ ⊢ A} → 𝒱 A V → ℰ B (N [ V ])
+𝒱 (A ⇒ B) (ƛ N) = ∀ (V : ∅ ⊢ A) → 𝒱 A V → ℰ B (N [ V ])
 𝒱 (A ⇒ B) _ = ⊥
 ```
 
-The terms in 𝒱 are indeed values.
+The well-behaved values (𝒱) are indeed values.
 
 ```
 𝒱→Value : ∀{A}{M : ∅ ⊢ A} → 𝒱 A M → Value M
@@ -153,21 +153,18 @@ The 𝒱 function implies the ℰ function.
 ### Canonical forms
 
 ```
-𝒱⇒→ƛ : ∀{A}{B}{M : ∅ ⊢ A ⇒ B} → 𝒱 (A ⇒ B) M → Σ[ N ∈ ∅ , A ⊢ B ] M ≡ ƛ N
+𝒱⇒→ƛ : ∀{A}{B}{M : ∅ ⊢ A ⇒ B}
+  → 𝒱 (A ⇒ B) M
+  → Σ[ N ∈ ∅ , A ⊢ B ] M ≡ ƛ N
 𝒱⇒→ƛ {A}{B}{ƛ N} wtv = ⟨ N , refl ⟩
-
-data Natural : ∅ ⊢ `ℕ → Set where
-   Nat-Z : Natural (`zero)
-
-𝒱ℕ→Nat : ∀{M : ∅ ⊢ `ℕ} → 𝒱 `ℕ M → Natural M
-𝒱ℕ→Nat {`zero} wtv = Nat-Z
 ```
 
 ### Compatibility lemma about reduction
 
 ```
 app-compat : ∀{A}{B} {L L'  : ∅ ⊢ A ⇒ B}{M M' : ∅ ⊢ A}
-           → L —↠ L' → Value L'
+           → L —↠ L'
+           → Value L'
            → M —↠ M'
            → L · M —↠ L' · M'
 app-compat {A}{B}{L}{L}{M}{M} (L ∎) vL (M ∎) = L · M ∎
@@ -187,10 +184,17 @@ app-compat {A}{B}{L}{L''}{M}{M'}(step—→ L {L'}{L''} L'→L'' L→L' ) vL' M�
 
 ### A technical lemma about extending substitutions
 
+
+We define the well-behaved substitutions σ to be the ones
+that map variables in Γ to well-behaved values.
+
 ```
 _⊢ˢ_ : (Γ : Context) → (Γ →ˢ ∅) → Set
 Γ ⊢ˢ σ = (∀ {C : Type} (x : Γ ∋ C) → 𝒱 C (σ x))
 ```
+
+We can extend a well-behaved substitution σ with another
+well-behaved value V.
 
 ```
 extend-sub : ∀{A}{V : ∅ ⊢ A}{Γ}{σ : Γ →ˢ ∅}
@@ -212,8 +216,8 @@ fundamental-property {A} (` ∋x) ⊢σ = 𝒱→ℰ {A} (⊢σ ∋x)
 fundamental-property {A ⇒ B}{Γ}{σ} (ƛ N) ⊢σ =
    ⟨ subst σ (ƛ N) , ⟨ ƛ (subst (exts σ) N) ∎ , ⟨ V-ƛ , IH ⟩ ⟩ ⟩
    where
-   IH : {V : ∅ ⊢ A} → 𝒱 A V → ℰ B (subst (exts σ) N [ V ])
-   IH {V} wtv = fundamental-property {B}{Γ , A}{V • σ} N (extend-sub wtv ⊢σ)
+   IH : (V : ∅ ⊢ A) → 𝒱 A V → ℰ B (subst (exts σ) N [ V ])
+   IH V wtv = fundamental-property {B}{Γ , A}{V • σ} N (extend-sub wtv ⊢σ)
 
 fundamental-property {B}{Γ}{σ} (_·_{A = A} L M) ⊢σ 
     with fundamental-property {A ⇒ B}{Γ}{σ} L ⊢σ
@@ -222,7 +226,7 @@ fundamental-property {B}{Γ}{σ} (_·_{A = A} L M) ⊢σ
 ... | ⟨ N , eq ⟩ rewrite eq 
     with fundamental-property M ⊢σ
 ... | ⟨ M' , ⟨ M→M' , ⟨ vM' , wtvM' ⟩ ⟩ ⟩
-    with wtvL' wtvM'
+    with wtvL' M' wtvM'
 ... | ⟨ V , ⟨ →V , ⟨ vV , wtvV ⟩ ⟩ ⟩ =
       ⟨ V , ⟨ R , ⟨ vV , wtvV ⟩ ⟩ ⟩
     where
