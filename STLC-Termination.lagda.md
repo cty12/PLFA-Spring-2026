@@ -150,15 +150,6 @@ The 𝒱 function implies the ℰ function.
 𝒱→ℰ {A}{M} wtv = ⟨ M , ⟨ M ∎ , ⟨ 𝒱→Value {A} wtv , wtv ⟩ ⟩ ⟩
 ```
 
-### Canonical forms
-
-```
-𝒱⇒→ƛ : ∀{A}{B}{M : ∅ ⊢ A ⇒ B}
-  → 𝒱 (A ⇒ B) M
-  → Σ[ N ∈ ∅ , A ⊢ B ] M ≡ ƛ N
-𝒱⇒→ƛ {A}{B}{ƛ N} wtv = ⟨ N , refl ⟩
-```
-
 ### Compatibility lemma about reduction
 
 ```
@@ -222,8 +213,8 @@ fundamental-property {A ⇒ B}{Γ}{σ} (ƛ N) ⊢σ =
 fundamental-property {B}{Γ}{σ} (_·_{A = A} L M) ⊢σ 
     with fundamental-property {A ⇒ B}{Γ}{σ} L ⊢σ
 ... | ⟨ L' , ⟨ L→L' , ⟨ vL' , wtvL' ⟩ ⟩ ⟩
-    with 𝒱⇒→ƛ wtvL'
-... | ⟨ N , eq ⟩ rewrite eq 
+    with vL'
+... | V-ƛ{N = N}
     with fundamental-property M ⊢σ
 ... | ⟨ M' , ⟨ M→M' , ⟨ vM' , wtvM' ⟩ ⟩ ⟩
     with wtvL' M' wtvM'
