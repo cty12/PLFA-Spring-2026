@@ -100,7 +100,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
    from your formalization of the STLC, instead
    including a unit type.
 
-* Termination and Bidirectional Typing:
+* March 3, Termination and Bidirectional Typing:
 
     * Extend the termination proof for STLC
       to include products and sums, as they appear

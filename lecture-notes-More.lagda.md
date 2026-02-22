@@ -185,7 +185,7 @@ data _⊢_⦂_ : Context → Term → Type → Set where
       -----------------
     → Γ ⊢ μ M ⦂ A
 
-  ⊢$ : ∀{Γ p k A}
+  ⊢$ : ∀{Γ A}{p : Prim}{k : rep p}
      → A ≡ typeof p
        -------------
      → Γ ⊢ $ p k ⦂ A
@@ -312,9 +312,10 @@ data _—→_ : Term → Term → Set where
       ------------------------------------------
     → (V ⦂⦂ Vs) ! ($ _ (suc i)) —→  Vs ! ($ _ i)
 
-  β-index-error : ∀ {N}
+  β-index-error : ∀ {V}
+    → Value V
       -----------------
-    → 〈〉 ! N —→ error
+    → 〈〉 ! V —→ error
 
   β-let : ∀{V N}
     → Value V
