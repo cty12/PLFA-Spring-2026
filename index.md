@@ -205,7 +205,7 @@ Ideas for project language features:
 |          | 12 | [Substitution](./lecture-notes-Substitution.lagda.md) Theorems | [link](./lecture-notes-Substitution.lagda.md)
 |          | 17 | [STLC Termination via Logical Relations](./STLC-Termination.lagda.md) | [link](./STLC-Termination.lagda.md)
 |          | 19 | [More](https://plfa.github.io/More/) constructs: numbers, let, products (pairs), sums, unit, empty, lists | [link](./lecture-notes-More.lagda.md)
-|          | 24 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference |
+|          | 24 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference | [link](./lecture-notes-Bidirectional.lagda.md)
 |          | 26  | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) |
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) |
 |          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus |
