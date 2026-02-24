@@ -136,3 +136,28 @@ synth-and-check Γ M A
 ... | yes refl = just tt
 ... | no neq = nothing
 ```
+
+```
+Ch : Type
+Ch = (`ℕ ⇒ `ℕ) ⇒ `ℕ ⇒ `ℕ
+twoᶜ : Term
+twoᶜ = (ƛ ƛ ` 1 · (` 1 · (` 0))) ⦂ Ch
+
+_ : inherit [] twoᶜ Ch ≡ just tt
+_ = refl
+
+plusᶜ : Term
+plusᶜ = (ƛ ƛ ƛ ƛ ` 3 · (` 1) · (` 2 · (` 1) · (` 0))) ⦂ (Ch ⇒ Ch ⇒ Ch)
+
+_ : inherit [] plusᶜ (Ch ⇒ Ch ⇒ Ch) ≡ just tt
+_ = refl
+
+sucᶜ : Term
+sucᶜ = ƛ `suc (` 0)
+
+2+2ᶜ : Term
+2+2ᶜ = (((plusᶜ · twoᶜ) · twoᶜ) · sucᶜ) · `zero
+
+_ : synthesize [] 2+2ᶜ ≡ just `ℕ
+_ = refl
+```

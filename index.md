@@ -108,7 +108,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
       (you may use either approach to products).
       Also, try to add μ and report on where the proof breaks.
 
-    * Extend the bidirectional type rules, `synthesize`, and `inherit`
+    * Extend the bidirectional typing functions `synthesize` and `inherit`
       to handle products and sums.
 
 * Do the `variants` exercise in
