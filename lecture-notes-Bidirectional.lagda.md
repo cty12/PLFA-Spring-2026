@@ -93,7 +93,7 @@ synthesize Γ case L [zero⇒ M |suc⇒ N ]
 ... | just tt = just A
 synthesize Γ (μ M) = nothing
 synthesize Γ (M ⦂ A)
-    with synth-and-check Γ M A
+    with inherit Γ M A
 ... | nothing = nothing
 ... | just tt = just A
 
