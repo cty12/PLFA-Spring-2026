@@ -125,7 +125,10 @@ data _⊢_ : Context → Type → Set where
     → Γ ⊢ A
 ```
 
-## Bidirectional Type Checker and Elaborator for Surface Language
+## Bidirectional Type Checker for Surface Language
+
+This type checker also translates (elaborates) the surface
+language into the intrinsic STLC.
 
 ```
 lookup : (Γ : Context) → (x : Id) → Maybe (∃[ A ] Γ ∋ A)
@@ -202,7 +205,6 @@ inherit Γ M A
 ```
 
 ## Translation from STLC back to Surface Language
-
 
 ```
 ∋→ℕ : ∀{Γ A} → Γ ∋ A → ℕ
