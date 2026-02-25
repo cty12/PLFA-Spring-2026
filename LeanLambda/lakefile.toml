@@ -1,0 +1,10 @@
+name = "LeanLambda"
+version = "0.1.0"
+defaultTargets = ["leanlambda"]
+
+[[lean_lib]]
+name = "LeanLambda"
+
+[[lean_exe]]
+name = "leanlambda"
+root = "Main"
