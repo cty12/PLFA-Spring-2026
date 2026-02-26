@@ -69,31 +69,31 @@ Typing rules
 
 Subtyping rules
 
-   ------ (S-Refl)
-   S <: S
+    ------ (S-Refl)
+    S <: S
 
-   S <: U   U <: T
-   --------------- (S-Trans)
-   S <: T
+    S <: U   U <: T
+    --------------- (S-Trans)
+    S <: T
 
-   -------- (S-Top)
-   S <: Top
+    -------- (S-Top)
+    S <: Top
 
-   T₁ <: S₁   S₂ <: T₂
-   ------------------- (S-Arrow) 
-   S₁ → S₂ <: T₁ → T₂
+    T₁ <: S₁   S₂ <: T₂
+    ------------------- (S-Arrow) 
+    S₁ → S₂ <: T₁ → T₂
 
-   --------------------------------------
-   {li :Ti i∈1..n+k } <: {li :Ti i∈1..n } (S-RcdWidth)
+    --------------------------------------
+    {li :Ti i∈1..n+k } <: {li :Ti i∈1..n } (S-RcdWidth)
 
-   ∀ i. Si <: Ti
-   ------------------------------------
-   {li :Si i∈1..n } <: {li :Ti i∈1..n } (S-RcdDepth) 
+    ∀ i. Si <: Ti
+    ------------------------------------
+    {li :Si i∈1..n } <: {li :Ti i∈1..n } (S-RcdDepth) 
 
 
-   {kj :Sj j∈1..n } is a permutation of {li :Ti i∈1..n }
-   -----------------------------------------------------
-   {kj :Sj j∈1..n } <: {li :Ti i∈1..n }  (S-RcdPerm) 
+    {kj :Sj j∈1..n } is a permutation of {li :Ti i∈1..n }
+    -----------------------------------------------------
+    {kj :Sj j∈1..n } <: {li :Ti i∈1..n }  (S-RcdPerm) 
 
 
 Typing rules
@@ -111,15 +111,6 @@ Typing rules
     Γ ⊢ t : {li : Ti i∈1..n }
     -------------------------  (T-Proj) 
     Γ ⊢ t.lj : Tj
-
-
-
-
-Lemma [Inversion of the subtype relation]:
-  1. If S <: T₁ →T₂, then S has the form S₁ → S₂, with T₁ <: S₁ and S₂ <: T₂.
-  2. If S <: {li :Ti i∈1..n }, then S has the form {kj :Sj j∈1..m},
-      with at least the labels {li i∈1..n }—i.e., {li i∈1..n }⊆{kj j∈1..m}—
-      and with Sj <: Ti for each common label li = kj .
 
 
 ## Properties of Record Field Names and Field Lookup
