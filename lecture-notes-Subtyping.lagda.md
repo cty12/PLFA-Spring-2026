@@ -778,16 +778,6 @@ plug M (rcd□ {n} i fs Ms) = (rcd n fs (insert {n} M i Ms))
 plug M (□# f)          = M # f
 ```
 
-The `Ms 〘 i 〙` notation returns the ith term from a sequence of
-arguments.
-
-```
-_〘_〙 : {n : ℕ} → Vec Term n → (i : Fin n) → Term
-_〘_〙 {suc n} (M ∷ Ms) zero = M
-_〘_〙 {suc n} (M ∷ Ms) (suc i) = Ms 〘 i 〙
-```
-
-
 ## Reduction
 
 In the following, just the β-# rule is new. It corresponds to the
@@ -820,7 +810,7 @@ data _—→_ : Term → Term → Set where
   β-# : ∀ {n}{ls : Vec Id n}{vs : Vec Term n} {lⱼ}{j : Fin n}
     → ls ❲ j ❳ ≡ lⱼ
       -----------------------------------------
-    → (rcd n ls vs) # lⱼ —→  vs 〘 j 〙
+    → (rcd n ls vs) # lⱼ —→  vs ❲ j ❳
 ```
 
 ## Canonical Forms
@@ -1081,7 +1071,7 @@ plug-inversion {L} {F} {B} (⊢<: ⊢M A<:B)
 getfield-pres : ∀{n}{As : Vec Type n}{A}{Ms : Vec Term n}{i : Fin n}
          → ∅ ⊢* Ms ⦂ As
          → As ❲ i ❳ ≡ A
-         → ∅ ⊢ Ms 〘 i 〙 ⦂ A
+         → ∅ ⊢ Ms ❲ i ❳ ⦂ A
 getfield-pres {i = zero} (⊢*cons ⊢M ⊢Ms) refl = ⊢M
 getfield-pres {i = suc i} (⊢*cons ⊢M ⊢Ms) As[i]=A = getfield-pres ⊢Ms As[i]=A
 ```
