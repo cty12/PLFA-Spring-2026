@@ -42,6 +42,8 @@ postulate
 
 ## Review of textbook (TAPL) definition of records and subtyping
 
+Syntax
+
     t ::= ...               terms:
           {lᵢ=tᵢ i∈1..n }    record
           t.l                 projection
