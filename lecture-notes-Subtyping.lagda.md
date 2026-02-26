@@ -40,6 +40,88 @@ postulate
     → f ≡ g
 ```
 
+## Review of textbook (TAPL) definition of records and subtyping
+
+    t ::= ...               terms:
+          {lᵢ=tᵢ i∈1..n }    record
+          t.l                 projection
+
+    v ::= ...               values:
+          {lᵢ= vᵢ i∈1..n }    record value
+
+    T ::= ...               types:
+          {lᵢ :Tᵢ i∈1..n }    type of records 
+
+Reduction
+
+    {lᵢ=vᵢ i∈1..n }.lⱼ ⟶ vⱼ
+
+Typing rules
+
+    t ⟶ t′
+    ------------
+    t.l ⟶ t′.l
+    
+    tⱼ ⟶ t′ⱼ
+    ---------------------------------------------
+    {lᵢ=vᵢ i∈1..j−1 ,lⱼ =tⱼ, lk=tk k∈j+1..n }
+    ⟶ {lᵢ=vᵢ i∈1..j−1 ,lⱼ =t′ⱼ, lk=tk k∈j+1..n }
+
+Subtyping rules
+
+   ------ (S-Refl)
+   S <: S
+
+   S <: U   U <: T
+   --------------- (S-Trans)
+   S <: T
+
+   -------- (S-Top)
+   S <: Top
+
+   T₁ <: S₁   S₂ <: T₂
+   ------------------- (S-Arrow) 
+   S₁ → S₂ <: T₁ → T₂
+
+   --------------------------------------
+   {li :Ti i∈1..n+k } <: {li :Ti i∈1..n } (S-RcdWidth)
+
+   ∀ i. Si <: Ti
+   ------------------------------------
+   {li :Si i∈1..n } <: {li :Ti i∈1..n } (S-RcdDepth) 
+
+
+   {kj :Sj j∈1..n } is a permutation of {li :Ti i∈1..n }
+   -----------------------------------------------------
+   {kj :Sj j∈1..n } <: {li :Ti i∈1..n }  (S-RcdPerm) 
+
+
+Typing rules
+
+    ...
+
+    Γ ⊢ t : S   S <: T
+    ------------------ (T-Sub)
+    Γ ⊢ t : T
+
+    ∀ i. Γ ⊢ ti : Ti
+    --------------------------------------- (T-Rcd)
+    Γ ⊢ {li =ti i∈1..n } : {li :Ti i∈1..n }
+
+    Γ ⊢ t : {li : Ti i∈1..n }
+    -------------------------  (T-Proj) 
+    Γ ⊢ t.lj : Tj
+
+
+
+
+Lemma [Inversion of the subtype relation]:
+  1. If S <: T₁ →T₂, then S has the form S₁ → S₂, with T₁ <: S₁ and S₂ <: T₂.
+  2. If S <: {li :Ti i∈1..n }, then S has the form {kj :Sj j∈1..m},
+      with at least the labels {li i∈1..n }—i.e., {li i∈1..n }⊆{kj j∈1..m}—
+      and with Sj <: Ti for each common label li = kj .
+
+
 ## Properties of Record Field Names and Field Lookup
 
 We shall represent field identifiers (aka. names) as strings.
@@ -310,6 +392,9 @@ lookup-vec-ty-size {n} {suc k}{A ∷ As} {suc j} As≤n =
 ```
 
 Here is the proof of reflexivity, by induction on the size of the type.
+(Unfortunately, induction directly on type A does not work because,
+in the case for Record, Agda's termination checker does not understand
+that `lookup As i` is a part of `As`.)
 
 ```
 <:-refl-aux : ∀{n}{A}{m : ty-size A ≤ n} → A <: A
