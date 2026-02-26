@@ -56,8 +56,6 @@ Reduction
 
     {lᵢ=vᵢ i∈1..n }.lⱼ ⟶ vⱼ
 
-Typing rules
-
     t ⟶ t′
     ------------
     t.l ⟶ t′.l
