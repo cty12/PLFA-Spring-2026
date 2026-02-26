@@ -11,9 +11,9 @@ open import Data.Unit using (⊤; tt)
 open import Data.List using (List; []; _∷_)
 open import Data.Vec
   using (Vec; toList; []; _∷_; lookup)
-open import Data.Fin using (Fin; zero; suc; reduce≥)
+open import Data.Fin using (Fin; 0F; suc; reduce≥)
 open import Data.Vec.Membership.Propositional using (_∈_)
-open import Data.Vec.Relation.Unary.Any using (Any; here; there)
+open import Data.Vec.Any using (Any; here; there)
 open import Data.Nat using (ℕ; zero; suc; _<_; _+_; _≤_; s≤s; z≤n)
 open import Data.Nat.Properties
    using (≤-refl; ≤-pred; m+n≤o⇒m≤o; m+n≤o⇒n≤o; n≤0⇒n≡0; ≤-step)
@@ -27,17 +27,7 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; _≢_; refl; cong; sym; trans)
 open import Relation.Nullary using (Dec; yes; no; ¬_)
 open import Relation.Nullary.Negation using (contradiction)
-
--- Need the following two imports for rewriting  
-open import Agda.Builtin.Equality
-open import Agda.Builtin.Equality.Rewrite
-
-
-postulate
-  extensionality : ∀ {A B : Set} {f g : A → B}
-    → (∀ (x : A) → f x ≡ g x)
-      -----------------------
-    → f ≡ g
+import Syntax
 ```
 
 ## Properties of Record Field Names and Field Lookup
@@ -116,7 +106,7 @@ The result of `lookup` is a member of the sequence.
 ```
 lookup-mem : ∀{n}{fs : Vec Id n}{j : Fin n} 
            → fs ❲ j ❳ ∈ fs
-lookup-mem {.(suc _)} {x ∷ fs} {zero} = here refl
+lookup-mem {.(suc _)} {x ∷ fs} {0F} = here refl
 lookup-mem {.(suc _)} {x ∷ fs} {suc j} = there lookup-mem
 ```
 
@@ -127,10 +117,10 @@ distinct-lookup-eq : ∀ {n}{fs : Vec Id n}{i j : Fin n}
    → distinct fs
    → fs ❲ j ❳ ≡ fs ❲ i ❳
    → i ≡ j
-distinct-lookup-eq {.(suc _)} {x ∷ fs} {zero} {zero} ⟨ x∉fs , dfs ⟩ lij = refl
-distinct-lookup-eq {suc n} {x ∷ fs} {zero} {suc j} ⟨ x∉fs , dfs ⟩ refl =
+distinct-lookup-eq {.(suc _)} {x ∷ fs} {0F} {0F} ⟨ x∉fs , dfs ⟩ lij = refl
+distinct-lookup-eq {suc n} {x ∷ fs} {0F} {suc j} ⟨ x∉fs , dfs ⟩ refl =
     ⊥-elim (x∉fs lookup-mem)
-distinct-lookup-eq {.(suc _)} {x ∷ fs} {suc i} {zero} ⟨ x∉fs , dfs ⟩ refl =
+distinct-lookup-eq {.(suc _)} {x ∷ fs} {suc i} {0F} ⟨ x∉fs , dfs ⟩ refl =
     ⊥-elim (x∉fs lookup-mem)
 distinct-lookup-eq {suc n} {x ∷ fs} {suc i} {suc j} ⟨ x∉fs , dfs ⟩ lij =
   let IH = distinct-lookup-eq {n} {fs}{i}{j} dfs lij in
@@ -303,7 +293,7 @@ If a vector of types is smaller than `n`, then so is any type in the vector.
 lookup-vec-ty-size : ∀{n}{k} {As : Vec Type k} {j}
    → vec-ty-size As ≤ n
    → ty-size (As ❲ j ❳) ≤ n
-lookup-vec-ty-size {n} {suc k} {A ∷ As} {zero} As≤n =
+lookup-vec-ty-size {n} {suc k} {A ∷ As} {0F} As≤n =
     m+n≤o⇒m≤o (ty-size A) As≤n
 lookup-vec-ty-size {n} {suc k}{A ∷ As} {suc j} As≤n =
     lookup-vec-ty-size {n} {k} {As} {j} (m+n≤o⇒n≤o (ty-size A) As≤n)
@@ -455,108 +445,55 @@ We instead use the notation
 because the period is a reserved symbol in Agda.
 
 ```
-Var = ℕ
+data Op : Set where
+  op-lam : Type → Op
+  op-app : Op
+  op-rec : Op
+  op-const : (p : Prim) → rep p → Op
+  op-let : Op
+  op-rcd : (n : ℕ) → Vec Id n → Op
+  op-member : Id → Op
 
-data Term : Set where
-  `_ : Var → Term
-  λ:_⇒_ : Type → Term → Term
-  _·_ : Term → Term → Term
-  μ_ : Term → Term
-  $ : (p : Prim) → rep p → Term
-  rcd : (n : ℕ) → Vec Id n → Vec Term n → Term
-  _#_ : Term → Id → Term
+repeat : ℕ → ℕ → List ℕ
+repeat x 0 = []
+repeat x (suc n) = x ∷ repeat x n
+
+sig : Op → List ℕ
+sig (op-lam A) = 1 ∷ []
+sig op-app = 0 ∷ 0 ∷ []
+sig op-rec = 1 ∷ []
+sig (op-const p k) = []
+sig op-let = 0 ∷ 1 ∷ []
+sig (op-rcd n fs) = repeat 0 n
+sig (op-member f) = 0 ∷ []
+
+open Syntax using (Rename; _•_; ↑; id; ext; ⦉_⦊)
+
+open Syntax.OpSig Op sig
+  using (`_; _⦅_⦆; cons; nil; bind; ast; _[_]; Subst; ⟪_⟫; ⟦_⟧; ⟪_⟫₊;
+         exts; _⨟_; exts-suc-rename; rename; ren-args; Args; Arg)
+  renaming (ABT to Term)
+
+pattern $ p k = (op-const p k) ⦅ nil ⦆
+
+pattern λ:_⇒_ A N  = (op-lam A) ⦅ cons (bind (ast N)) nil ⦆
+
+pattern μ N  = op-rec ⦅ cons (bind (ast N)) nil ⦆
+
+pattern _·_ L M = op-app ⦅ cons (ast L) (cons (ast M) nil) ⦆
+
+pattern `let L M = op-let ⦅ cons (ast L) (cons (bind (ast M)) nil) ⦆
+
+pattern _#_ M f = (op-member f) ⦅ cons (ast M) nil ⦆
 ```
 
-## Renamings
+The `Ms 〘 i 〙` notation returns the ith term from a sequence of
+arguments.
 
 ```
-Rename : Set
-Rename = Var → Var
-
-infixr 6 _•ʳ_
-_•ʳ_ : Var → Rename → Rename
-(y •ʳ ρ) 0 = y
-(y •ʳ ρ) (suc x) = ρ x
-
-⇑ʳ : Rename → Rename
-⇑ʳ ρ x = suc (ρ x)
-
-ext : Rename → Rename
-ext ρ = 0 •ʳ ⇑ʳ ρ
-
-idʳ : Rename
-idʳ x = x
-
-Z-shiftʳ : (0 •ʳ ⇑ʳ idʳ) ≡ idʳ
-Z-shiftʳ = extensionality G
-  where G : ∀ x → (0 •ʳ ⇑ʳ idʳ) x ≡ idʳ x
-        G 0 = refl
-        G (suc x) = refl
-
-rename-vec : Rename → ∀{n} → Vec Term n → Vec Term n
-
-rename : Rename → Term → Term
-rename ρ (` x)          =  ` (ρ x)
-rename ρ (λ: A ⇒ N)     =  λ: A ⇒ (rename (ext ρ) N)
-rename ρ (L · M)        =  (rename ρ L) · (rename ρ M)
-rename ρ (μ N)          = μ (rename (ext ρ) N)
-rename ρ ($ p k)        = $ p k
-rename ρ (rcd n fs Ms)  = rcd n fs (rename-vec ρ Ms)
-rename ρ (M # f)        = (rename ρ M) # f
-
-rename-vec ρ {zero} [] = []
-rename-vec ρ {suc n} (M ∷ Ms) = rename ρ M ∷ rename-vec ρ Ms
-```
-
-## Substitution
-
-```
-Subst : Set
-Subst = Var → Term
-
-infixr 6 _•_
-_•_ : Term → Subst → Subst
-(M • σ) 0 = M
-(M • σ) (suc x) = σ x
-
-id : Subst
-id x = ` x
-
-↑ : Subst
-↑ x = ` (suc x)
-
-⇑ : Subst → Subst
-⇑ σ x = rename suc (σ x)
-
-exts : Subst → Subst
-exts σ = (` 0) • ⇑ σ
-
-subst-vec : Subst → ∀{n} → Vec Term n → Vec Term n
-
-subst : (σ : Subst) → Term → Term
-subst σ (` k)          =  σ k
-subst σ (λ: A ⇒ N)     =  λ: A ⇒ (subst (exts σ) N)
-subst σ (L · M)        =  (subst σ L) · (subst σ M)
-subst σ (μ N)          = μ (subst (exts σ) N)
-subst σ ($ p k)        = $ p k
-subst σ (rcd n fs Ms)  = rcd n fs (subst-vec σ Ms)
-subst σ (M # f)        = (subst σ M) # f
-
-subst-vec σ {zero} [] = []
-subst-vec σ {suc n} (M ∷ Ms) = subst σ M ∷ subst-vec σ Ms
-
-abstract
-  infixr 5 _⨟_
-  _⨟_ : Subst → Subst → Subst
-  (σ₁ ⨟ σ₂) = λ x → subst σ₂ (σ₁ x)
-
-  seqˢ-def : (σ₁ : Subst) → (σ₂ : Subst) (x : Var)
-    → (σ₁ ⨟ σ₂) x ≡ subst σ₂ (σ₁ x)
-  seqˢ-def σ₁ σ₂ x = refl
-{-# REWRITE seqˢ-def #-}
-
-_[_] : Term → Term → Term
-N [ M ] =  subst (M • id) N
+_〘_〙 : {n : ℕ} → Args (repeat 0 n) → (i : Fin n) → Term
+_〘_〙 {suc n} (cons (ast M) Ms) 0F = M
+_〘_〙 {suc n} (cons (ast M) Ms) (suc i) = Ms 〘 i 〙
 ```
 
 ## Contexts
@@ -588,7 +525,7 @@ The typing rules for records closely follow the rules (T-Rcd and
 T-Proj) in Chapter 11 of TAPL.
 
 ```
-data _⊢*_⦂_ : Context → ∀ {n} → Vec Term n → Vec Type n → Set 
+data _⊢*_⦂_ : Context → ∀ {n} → Args (repeat 0 n) → Vec Type n → Set 
 
 data _⊢_⦂_ : Context → Term → Type → Set where
 
@@ -621,10 +558,16 @@ data _⊢_⦂_ : Context → Term → Type → Set where
        -------------
      → Γ ⊢ $ p k ⦂ A
 
-  ⊢rcd : ∀{Γ n}{Ms : Vec Term n}{As : Vec Type n}{fs : Vec Id n}
+  ⊢let : ∀{Γ A B M N}
+    → Γ ⊢ M ⦂ A
+    → Γ , A ⊢ N ⦂ B
+      -----------------
+    → Γ ⊢ `let M N ⦂ B
+
+  ⊢rcd : ∀{Γ n}{Ms : Args (repeat 0 n) }{As : Vec Type n}{fs : Vec Id n}
     → Γ ⊢* Ms ⦂ As
     → (d : distinct fs)
-    →  Γ ⊢ (rcd n fs Ms) ⦂ Record n fs As {d}
+    →  Γ ⊢ (op-rcd n fs) ⦅ Ms ⦆ ⦂ Record n fs As {d}
 
   ⊢# : ∀{Γ A M n fs As d i f}
     → Γ ⊢ M ⦂ Record n fs As {d}
@@ -639,12 +582,12 @@ data _⊢_⦂_ : Context → Term → Type → Set where
     → Γ ⊢ M ⦂ B
 
 data _⊢*_⦂_ where
-  ⊢*nil : ∀{Γ} → Γ ⊢* [] ⦂ []
+  ⊢*nil : ∀{Γ} → Γ ⊢* nil ⦂ []
 
-  ⊢*cons : ∀ {n}{Γ M}{Ms : Vec Term n}{A}{As : Vec Type n}
+  ⊢*cons : ∀ {n}{Γ M}{Ms : Args (repeat 0 n)}{A}{As : Vec Type n}
          → Γ ⊢ M ⦂ A
          → Γ ⊢* Ms ⦂ As
-         → Γ ⊢* (M ∷ Ms) ⦂ (A ∷ As)
+         → Γ ⊢* (cons (ast M) Ms) ⦂ (A ∷ As)
 ```
 
 ## Values
@@ -661,7 +604,8 @@ data Value : Term → Set where
     → Value ($ p k)
 
   V-rcd : ∀{n}{fs}{Ms}
-    → Value (rcd n fs Ms)
+    {- cheating a bit here -}
+    → Value ((op-rcd n fs) ⦅ Ms  ⦆ )
 ```
 
 ## Frames and plug
@@ -670,17 +614,18 @@ data Value : Term → Set where
 data Frame : Set where
   □·_ : Term → Frame
   _·□ : (M : Term) → (v : Value M) → Frame
-  rcd□ : ∀ {n : ℕ} (i : Fin n) → Vec Id n → Vec Term n → Frame
+  rcd□ : ∀ {n : ℕ} (i : Fin n) → Vec Id n → Args (repeat 0 n) → Frame
   □#_ : Id → Frame
+  let□ : Term → Frame
 ```
 
 The `insert` function, used in the `plug` function defined next,
 replaces the ith argument in a sequence of arguments.
 
 ```
-insert : ∀{n} → Term → (i : Fin n) → Vec Term n → Vec Term n
-insert {suc n} M zero (M' ∷ Ms) = M ∷ Ms
-insert {suc n} M (suc i) (M' ∷ Ms) = M' ∷ (insert {n} M i Ms)
+insert : ∀{n} → Term → (i : Fin n) → Args (repeat 0 n) → Args (repeat 0 n)
+insert {suc n} M 0F (cons M' Ms) = cons (ast M) Ms
+insert {suc n} M (suc i) (cons M' Ms) = cons M' (insert {n} M i Ms)
 ```
 
 The `plug` function fills a frame's hole with a term.
@@ -689,19 +634,10 @@ The `plug` function fills a frame's hole with a term.
 plug : Term → Frame → Term
 plug L (□· M)             = L · M
 plug M ((L ·□) v)         = L · M
-plug M (rcd□ {n} i fs Ms) = (rcd n fs (insert {n} M i Ms))
+plug M (rcd□ {n} i fs Ms) = (op-rcd n fs) ⦅ insert {n} M i Ms ⦆
 plug M (□# f)          = M # f
+plug M (let□ N)        = `let M N
 ```
-
-The `Ms 〘 i 〙` notation returns the ith term from a sequence of
-arguments.
-
-```
-_〘_〙 : {n : ℕ} → Vec Term n → (i : Fin n) → Term
-_〘_〙 {suc n} (M ∷ Ms) zero = M
-_〘_〙 {suc n} (M ∷ Ms) (suc i) = Ms 〘 i 〙
-```
-
 
 ## Reduction
 
@@ -732,10 +668,15 @@ data _—→_ : Term → Term → Set where
       ---------------------------------------------
     → ($ (b ⇒ p) f) · ($ (base b) k) —→ ($ p (f k))
 
-  β-# : ∀ {n}{ls : Vec Id n}{vs : Vec Term n} {lⱼ}{j : Fin n}
+  β-let : ∀{V N}
+    → Value V
+      -------------------
+    → `let V N —→ N [ V ]
+
+  β-# : ∀ {n}{ls : Vec Id n}{vs : Args (repeat 0 n)} {lⱼ}{j : Fin n}
     → ls ❲ j ❳ ≡ lⱼ
       -----------------------------------------
-    → (rcd n ls vs) # lⱼ —→  vs 〘 j 〙
+    → ((op-rcd n ls) ⦅ vs ⦆ ) # lⱼ —→  vs 〘 j 〙
 ```
 
 ## Canonical Forms
@@ -782,11 +723,11 @@ canonical-base {B-Bool} (⊢<: ⊢V <:-bool) vV = canonical-base ⊢V vV
 
 ```
 data Rcd : Term → Type → Set where
-  rcd : ∀{n}{fs : Vec Id n}{Ms : Vec Term n}{As : Vec Type n}{d : distinct fs}
+  rcd : ∀{n}{fs : Vec Id n}{Ms : Args (repeat 0 n)}{As : Vec Type n}{d : distinct fs}
          {k}{ks : Vec Id k}{Bs : Vec Type k}{d' : distinct ks}
       → ∅ ⊢* Ms ⦂ As
       → Record n fs As {d} <: Record k ks Bs {d'}
-      → Rcd (rcd n fs Ms) (Record k ks Bs {d'})
+      → Rcd ((op-rcd n fs) ⦅ Ms ⦆) (Record k ks Bs {d'})
 ```
 
 ```
@@ -841,6 +782,10 @@ progress (⊢· {L = L}{M}{A}{B} ⊢L ⊢M)
         with canonical-base ⊢M VM 
 ...     | base-const                      = step δ
 progress (⊢μ ⊢M)                          = step β-μ
+progress (⊢let {N = N} ⊢L ⊢N)
+    with progress ⊢L
+... | step L—→L′                          = step (ξ (let□ N) L—→L′)
+... | done VL                             = step (β-let VL)
 progress (⊢# {n = n}{fs}{As}{d}{i}{f} ⊢R lif liA)
     with progress ⊢R
 ... | step R—→R′                          = step (ξ (□# f) R—→R′)
@@ -857,7 +802,7 @@ progress (⊢<: {A = A}{B} ⊢M A<:B)         = progress ⊢M
 
 ```
 WTRename : Context → Rename → Context → Set
-WTRename Γ ρ Δ = ∀ {x A} → Γ ∋ x ⦂ A → Δ ∋ ρ x ⦂ A
+WTRename Γ ρ Δ = ∀ {x A} → Γ ∋ x ⦂ A → Δ ∋ ⦉ ρ ⦊ x ⦂ A
 ```
 
 ```
@@ -870,11 +815,11 @@ ext-pres {ρ = ρ } ⊢ρ (S {x = x} ∋x) =  S (⊢ρ ∋x)
 ```
 
 ```
-rename-vec-pres : ∀ {Γ Δ ρ}{n}{Ms : Vec Term n}{As : Vec Type n}
+ren-args-pres : ∀ {Γ Δ ρ}{n}{Ms : Args (repeat 0 n)}{As : Vec Type n}
   → WTRename Γ ρ Δ
   → Γ ⊢* Ms ⦂ As
     ---------------------
-  → Δ ⊢* rename-vec ρ Ms ⦂ As
+  → Δ ⊢* ren-args ρ Ms ⦂ As
 ```
 
 ```
@@ -888,19 +833,21 @@ rename-pres {ρ = ρ} ⊢ρ (⊢λ ⊢N)   =  ⊢λ (rename-pres {ρ = ext ρ} (
 rename-pres {ρ = ρ} ⊢ρ (⊢· ⊢L ⊢M)        =  ⊢· (rename-pres {ρ = ρ} ⊢ρ ⊢L) (rename-pres {ρ = ρ} ⊢ρ ⊢M)
 rename-pres {ρ = ρ} ⊢ρ (⊢μ ⊢M)   =  ⊢μ (rename-pres {ρ = ext ρ} (ext-pres {ρ = ρ} ⊢ρ) ⊢M)
 rename-pres ⊢ρ (⊢$ eq)           = ⊢$ eq
-rename-pres ⊢ρ (⊢rcd ⊢Ms dfs) = ⊢rcd (rename-vec-pres ⊢ρ ⊢Ms ) dfs
+rename-pres {ρ = ρ} ⊢ρ (⊢let ⊢M ⊢N) =
+    ⊢let (rename-pres {ρ = ρ} ⊢ρ ⊢M) (rename-pres {ρ = ext ρ} (ext-pres {ρ = ρ} ⊢ρ) ⊢N)
+rename-pres ⊢ρ (⊢rcd ⊢Ms dfs) = ⊢rcd (ren-args-pres ⊢ρ ⊢Ms ) dfs
 rename-pres {ρ = ρ} ⊢ρ (⊢# {d = d} ⊢R lif liA) = ⊢# {d = d}(rename-pres {ρ = ρ} ⊢ρ ⊢R) lif liA
 rename-pres {ρ = ρ} ⊢ρ (⊢<: ⊢M lt) = ⊢<: (rename-pres {ρ = ρ} ⊢ρ ⊢M) lt
 
-rename-vec-pres ⊢ρ ⊢*nil = ⊢*nil
-rename-vec-pres {ρ = ρ} ⊢ρ (⊢*cons ⊢M ⊢Ms) =
-  let IH = rename-vec-pres {ρ = ρ} ⊢ρ ⊢Ms in
+ren-args-pres ⊢ρ ⊢*nil = ⊢*nil
+ren-args-pres {ρ = ρ} ⊢ρ (⊢*cons ⊢M ⊢Ms) =
+  let IH = ren-args-pres {ρ = ρ} ⊢ρ ⊢Ms in
   ⊢*cons (rename-pres {ρ = ρ} ⊢ρ ⊢M) IH
 ```
 
 ```
 WTSubst : Context → Subst → Context → Set
-WTSubst Γ σ Δ = ∀ {A x} → Γ ∋ x ⦂ A → Δ ⊢ subst σ (` x) ⦂ A
+WTSubst Γ σ Δ = ∀ {A x} → Γ ∋ x ⦂ A → Δ ⊢ ⟪ σ ⟫ (` x) ⦂ A
 ```
 
 ```
@@ -910,35 +857,36 @@ exts-pres : ∀ {Γ Δ σ B}
   → WTSubst (Γ , B) (exts σ) (Δ , B)
 exts-pres {σ = σ} Γ⊢σ Z = ⊢` Z
 exts-pres {σ = σ} Γ⊢σ (S {x = x} ∋x)
-     = rename-pres {ρ = suc} S (Γ⊢σ ∋x)
-     -- rewrite exts-suc-rename σ x
+    rewrite exts-suc-rename σ x = rename-pres {ρ = ↑ 1} S (Γ⊢σ ∋x)
 ```
 
 ```
-subst-vec-pres : ∀ {Γ Δ σ}{n}{Ms : Vec Term n}{A}
+subst-args : ∀ {Γ Δ σ}{n}{Ms : Args (repeat 0 n)}{A}
   → WTSubst Γ σ Δ
   → Γ ⊢* Ms ⦂ A
-    -----------------------
-  → Δ ⊢* subst-vec σ Ms ⦂ A
+    -----------------
+  → Δ ⊢* ⟪ σ ⟫₊ Ms ⦂ A
 
-subst-pres : ∀ {Γ Δ σ N A}
+subst : ∀ {Γ Δ σ N A}
   → WTSubst Γ σ Δ
   → Γ ⊢ N ⦂ A
     ---------------
-  → Δ ⊢ subst σ N ⦂ A
-subst-pres Γ⊢σ (⊢` eq)            = Γ⊢σ eq
-subst-pres {σ = σ} Γ⊢σ (⊢λ ⊢N)    = ⊢λ (subst-pres{σ = exts σ}(exts-pres {σ = σ} Γ⊢σ) ⊢N) 
-subst-pres {σ = σ} Γ⊢σ (⊢· ⊢L ⊢M) = ⊢· (subst-pres{σ = σ} Γ⊢σ ⊢L) (subst-pres{σ = σ} Γ⊢σ ⊢M) 
-subst-pres {σ = σ} Γ⊢σ (⊢μ ⊢M)    = ⊢μ (subst-pres{σ = exts σ} (exts-pres{σ = σ} Γ⊢σ) ⊢M) 
-subst-pres Γ⊢σ (⊢$ e)             = ⊢$ e 
-subst-pres Γ⊢σ (⊢rcd ⊢Ms dfs) = ⊢rcd (subst-vec-pres Γ⊢σ ⊢Ms ) dfs
-subst-pres {σ = σ} Γ⊢σ (⊢# {d = d} ⊢R lif liA) =
-    ⊢# {d = d} (subst-pres {σ = σ} Γ⊢σ ⊢R) lif liA
-subst-pres {σ = σ} Γ⊢σ (⊢<: ⊢N lt) = ⊢<: (subst-pres {σ = σ} Γ⊢σ ⊢N) lt
+  → Δ ⊢ ⟪ σ ⟫ N ⦂ A
+subst Γ⊢σ (⊢` eq)            = Γ⊢σ eq
+subst {σ = σ} Γ⊢σ (⊢λ ⊢N)    = ⊢λ (subst{σ = exts σ}(exts-pres {σ = σ} Γ⊢σ) ⊢N) 
+subst {σ = σ} Γ⊢σ (⊢· ⊢L ⊢M) = ⊢· (subst{σ = σ} Γ⊢σ ⊢L) (subst{σ = σ} Γ⊢σ ⊢M) 
+subst {σ = σ} Γ⊢σ (⊢μ ⊢M)    = ⊢μ (subst{σ = exts σ} (exts-pres{σ = σ} Γ⊢σ) ⊢M) 
+subst Γ⊢σ (⊢$ e)             = ⊢$ e 
+subst {σ = σ} Γ⊢σ (⊢let ⊢M ⊢N) =
+    ⊢let (subst {σ = σ} Γ⊢σ ⊢M) (subst {σ = exts σ} (exts-pres {σ = σ} Γ⊢σ) ⊢N) 
+subst Γ⊢σ (⊢rcd ⊢Ms dfs) = ⊢rcd (subst-args Γ⊢σ ⊢Ms ) dfs
+subst {σ = σ} Γ⊢σ (⊢# {d = d} ⊢R lif liA) =
+    ⊢# {d = d} (subst {σ = σ} Γ⊢σ ⊢R) lif liA
+subst {σ = σ} Γ⊢σ (⊢<: ⊢N lt) = ⊢<: (subst {σ = σ} Γ⊢σ ⊢N) lt
 
-subst-vec-pres Γ⊢σ ⊢*nil = ⊢*nil
-subst-vec-pres {σ = σ} Γ⊢σ (⊢*cons ⊢M ⊢Ms) =
-    ⊢*cons (subst-pres {σ = σ} Γ⊢σ ⊢M) (subst-vec-pres Γ⊢σ ⊢Ms)
+subst-args Γ⊢σ ⊢*nil = ⊢*nil
+subst-args {σ = σ} Γ⊢σ (⊢*cons ⊢M ⊢Ms) =
+    ⊢*cons (subst {σ = σ} Γ⊢σ ⊢M) (subst-args Γ⊢σ ⊢Ms)
 ```
 
 ```
@@ -947,10 +895,10 @@ substitution : ∀{Γ A B M N}
    → (Γ , A) ⊢ N ⦂ B
      ---------------
    → Γ ⊢ N [ M ] ⦂ B
-substitution {Γ}{A}{B}{M}{N} ⊢M ⊢N = subst-pres {σ = M • id} G ⊢N
+substitution {Γ}{A}{B}{M}{N} ⊢M ⊢N = subst {σ = M • ↑ 0} G ⊢N
     where
     G : ∀ {A₁ : Type} {x : ℕ}
-      → (Γ , A) ∋ x ⦂ A₁ → Γ ⊢ subst (M • id) (` x) ⦂ A₁
+      → (Γ , A) ∋ x ⦂ A₁ → Γ ⊢ ⟪ M • ↑ 0 ⟫ (` x) ⦂ A₁
     G {A₁} {zero} Z = ⊢M
     G {A₁} {suc x} (S ∋x) = ⊢` ∋x
 ```
@@ -958,13 +906,13 @@ substitution {Γ}{A}{B}{M}{N} ⊢M ⊢N = subst-pres {σ = M • id} G ⊢N
 ## Plug Inversion
 
 ```
-insert-inversion : ∀{n}{M}{i : Fin n}{Ms : Vec Term n}
+insert-inversion : ∀{n}{M}{i : Fin n}{Ms : Args (repeat 0 n)}
      {As : Vec Type n}
    → ∅ ⊢* insert M i Ms ⦂ As
    → Σ[ B ∈ Type ] ∅ ⊢ M ⦂ B × (∀ M' → ∅ ⊢ M' ⦂ B → ∅ ⊢* insert M' i Ms ⦂ As)
-insert-inversion {suc n} {M} {zero} {M' ∷ Ms} (⊢*cons {A = A} ⊢M ⊢Ms) =
+insert-inversion {suc n} {M} {0F} {cons (ast M') Ms} (⊢*cons {A = A} ⊢M ⊢Ms) =
   ⟨ A , ⟨ ⊢M , (λ M' z → ⊢*cons z ⊢Ms) ⟩ ⟩
-insert-inversion {suc n} {M} {suc i} {M' ∷ Ms} (⊢*cons ⊢M ⊢Ms)
+insert-inversion {suc n} {M} {suc i} {cons (ast M') Ms} (⊢*cons ⊢M ⊢Ms)
     with insert-inversion {n} {M} {i} {Ms} ⊢Ms
 ... | ⟨ B , ⟨ ⊢M' , imp ⟩ ⟩ = ⟨ B , ⟨ ⊢M' , (λ M' z → ⊢*cons ⊢M (imp M' z)) ⟩ ⟩
 ```
@@ -978,6 +926,8 @@ plug-inversion {M} {□· N} {A} (⊢· {A = A'} ⊢M ⊢N) =
     ⟨ A' ⇒ A , ⟨ ⊢M , (λ M' z → ⊢· z ⊢N) ⟩ ⟩
 plug-inversion {M} {(L ·□) v} {A} (⊢· {A = A'} ⊢L ⊢M) =
     ⟨ A' , ⟨ ⊢M , (λ M' → ⊢· ⊢L) ⟩ ⟩
+plug-inversion {M} {let□ N} {A} (⊢let {A = A'} ⊢M ⊢N) =
+    ⟨ A' , ⟨ ⊢M , (λ M' z → ⊢let z ⊢N) ⟩ ⟩
 plug-inversion {F = rcd□ i fs Ms} (⊢rcd ⊢Ms dfs)
     with insert-inversion ⊢Ms
 ... | ⟨ A' , ⟨ ⊢M , imp ⟩ ⟩ =    
@@ -993,11 +943,11 @@ plug-inversion {L} {F} {B} (⊢<: ⊢M A<:B)
 ## Preservation
 
 ```
-getfield-pres : ∀{n}{As : Vec Type n}{A}{Ms : Vec Term n}{i : Fin n}
+getfield-pres : ∀{n}{As : Vec Type n}{A}{Ms : Args (repeat 0 n)}{i : Fin n}
          → ∅ ⊢* Ms ⦂ As
          → As ❲ i ❳ ≡ A
          → ∅ ⊢ Ms 〘 i 〙 ⦂ A
-getfield-pres {i = zero} (⊢*cons ⊢M ⊢Ms) refl = ⊢M
+getfield-pres {i = 0F} (⊢*cons ⊢M ⊢Ms) refl = ⊢M
 getfield-pres {i = suc i} (⊢*cons ⊢M ⊢Ms) As[i]=A = getfield-pres ⊢Ms As[i]=A
 ```
 
@@ -1020,6 +970,7 @@ preserve (⊢· ⊢L ⊢M) δ
     rewrite inversion-<:-base A1b
     with canonical-base ⊢M V-const
 ... | base-const = ⊢<: (⊢$ refl) pA
+preserve (⊢let ⊢M ⊢N) (β-let vV) = substitution ⊢M ⊢N
 preserve (⊢# {d = d}{i} ⊢R lif liA) (β-# {j = j} lif2)
     with canonical-rcd {d = d} ⊢R V-rcd
 ... | rcd {As = As'}{d = d'} ⊢Ms (<:-rcd fs⊆fs' As'<:As)
