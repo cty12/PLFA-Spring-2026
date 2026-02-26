@@ -51,7 +51,7 @@ def subst (σ : Nat → Raw) : Raw → Raw
   | .case L M N => .case (subst σ L) (subst σ M) (subst (exts σ) N)
   | .mu A N     => .mu A (subst (exts σ) N)
 
-def instantiate (N : Raw) (M : Raw) : Raw :=
+def single_subst (N : Raw) (M : Raw) : Raw :=
   let σ : Nat → Raw
     | 0     => M
     | i + 1 => .var i
@@ -98,12 +98,12 @@ inductive Value : Raw → Type where
 inductive Step : Raw → Raw → Type where
   | xi_app1 : ∀ {L L' M}, Step L L' → Step (.app L M) (.app L' M)
   | xi_app2 : ∀ {V M M'}, Value V → Step M M' → Step (.app V M) (.app V M')
-  | β_lam   : ∀ {A N W}, Value W → Step (.app (.lam A N) W) (instantiate N W)
+  | β_lam   : ∀ {A N W}, Value W → Step (.app (.lam A N) W) (single_subst N W)
   | xi_suc  : ∀ {M M'}, Step M M' → Step (.suc M) (.suc M')
   | xi_case : ∀ {L L' M N}, Step L L' → Step (.case L M N) (.case L' M N)
   | β_zero  : ∀ {M N}, Step (.case .zero M N) M
-  | β_suc   : ∀ {V M N}, Value V → Step (.case (.suc V) M N) (instantiate N V)
-  | β_mu    : ∀ {A N}, Step (.mu A N) (instantiate N (.mu A N))
+  | β_suc   : ∀ {V M N}, Value V → Step (.case (.suc V) M N) (single_subst N V)
+  | β_mu    : ∀ {A N}, Step (.mu A N) (single_subst N (.mu A N))
 
 infix:20 " —→ " => Step
 
@@ -178,9 +178,9 @@ def typing_subst {Γ Δ : Context} {σ : Nat → Raw} {M : Raw} {A : Ty}
                 (fun hVar => .S (hσ v |> fun _ => hVar)) (hσ v)
       .t_mu (typing_subst hσ' hN)
 
-def typing_instantiation {Γ : Context} {A B : Ty} {N M : Raw}
+def typing_single_subst {Γ : Context} {A B : Ty} {N M : Raw}
   (hN : HasType (B :: Γ) N A) (hM : HasType Γ M B) :
-  HasType Γ (instantiate N M) A := by
+  HasType Γ (single_subst N M) A := by
   -- Define the mapping: 0 goes to M, and j+1 shifts down to j
   let σ := fun (i : Nat) => match i with | 0 => M | j+1 => .var j
 
@@ -208,17 +208,16 @@ def preservation {M N : Raw} {A : Ty}
   match hS with
   | .β_lam hV =>
       match hT with
-      | .t_app (.t_lam hN) hM => typing_instantiation hN hM
+      | .t_app (.t_lam hN) hM => typing_single_subst hN hM
   | .β_zero =>
       match hT with
       | .t_case _ hM _ => hM
   | .β_suc hV =>
       match hT with
-      | .t_case (.t_suc hL) _ hN => typing_instantiation hN hL
+      | .t_case (.t_suc hL) _ hN => typing_single_subst hN hL
   | .β_mu (A := ATy) (N := Body) =>
-      -- We explicitly match hT to show its index is (mu ATy Body)
       match hT with
-      | .t_mu hN => typing_instantiation hN (.t_mu hN)
+      | .t_mu hN => typing_single_subst hN (.t_mu hN)
   | .xi_app1 s =>
       match hT with
       | .t_app hL hM => .t_app (preservation hL s) hM
