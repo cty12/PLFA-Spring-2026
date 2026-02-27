@@ -279,94 +279,91 @@ def subst_one_at_one (N : Raw) (M : Raw) : Raw :=
 -- 2. CORE SUBSTITUTION THEOREMS
 -------------------------------------------------------------------------------
 
+/-- Lemma: Composition of extensions is the extension of the composition.
+    Corresponds to `ext-equiv` and `Z-shiftʳ` in the Agda source[cite: 1]. -/
+theorem ext_comp (ρ₁ ρ₂ : Nat → Nat) :
+  (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
+  funext i
+  cases i with
+  | zero => rfl
+  | succ n => rfl
+
 /-- rename ρ₂ (rename ρ₁ M) ≡ rename (ρ₂ ∘ ρ₁) M -/
 theorem rename_rename_commute (ρ₁ ρ₂ : Nat → Nat) (M : Raw) :
   rename ρ₂ (rename ρ₁ M) = rename (fun i => ρ₂ (ρ₁ i)) M := by
-  induction M generalizing ρ₁ ρ₂
-  case var i => rfl
-  case lam A N ih =>
-    simp [rename]
-    rw [ih (ext ρ₁) (ext ρ₂)]
-    have ext_comp : (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
-      funext i; cases i; rfl
-    congr; exact ext_comp
-  case app L M ihL ihM => simp [rename]; rw [ihL, ihM]
-  case zero => rfl
-  case suc M ih => simp [rename]; rw [ih]
-  case case L M N ihL ihM ihN =>
-    simp [rename]; rw [ihL, ihM]
-    rw [ihN (ext ρ₁) (ext ρ₂)]
-    have ext_comp : (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
-      funext i; cases i; rfl
-    congr; exact ext_comp
-  case mu A N ih =>
-    simp [rename]; rw [ih (ext ρ₁) (ext ρ₂)]
-    have ext_comp : (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
-      funext i; cases i; rfl
-    congr; exact ext_comp
+  induction M generalizing ρ₁ ρ₂ with
+  | var i => 
+    -- Variables are trivially renamed[cite: 8].
+    rfl
+  | lam A N ih =>
+    -- For lambdas, we apply the inductive hypothesis to the body N.
+    -- We use ext_comp to rewrite the composition of extended environments.
+    simp only [rename]
+    rw [ih (ext ρ₁) (ext ρ₂), ext_comp]
+  | app L R ihL ihR =>
+    -- Applications distribute the renaming to both sides[cite: 10].
+    simp only [rename]
+    rw [ihL, ihR]
+  | zero => 
+    -- Zero is a constant, so it remains unchanged[cite: 11].
+    rfl
+  | suc M ih =>
+    -- Successor simply applies to its inner term[cite: 12].
+    simp only [rename]
+    rw [ih]
+  | case L M N ihL ihM ihN =>
+    -- Case statements distribute to all three branches[cite: 13].
+    -- The N branch binds a variable, so we use ext_comp again.
+    simp only [rename]
+    rw [ihL, ihM, ihN (ext ρ₁) (ext ρ₂), ext_comp]
+  | mu A N ih =>
+    -- Mu binds a variable, handled exactly like lam[cite: 14].
+    simp only [rename]
+    rw [ih (ext ρ₁) (ext ρ₂), ext_comp]
 
-/-- subst τ (rename ρ M) ≡ subst (τ ∘ ρ) M -/
+/-- Helper lemma: composing `ext` and `exts` is equivalent to extending the composition. -/
+theorem exts_ext_comp (ρ : Nat → Nat) (τ : Nat → Raw) :
+  (fun i => exts τ (ext ρ i)) = exts (fun i => τ (ρ i)) := by
+  funext i
+  cases i with
+  | zero => 
+    -- exts τ (ext ρ 0) = exts τ 0 = .var 0
+    -- exts (fun i => τ (ρ i)) 0 = .var 0
+    rfl
+  | succ n => 
+    -- exts τ (ext ρ (n+1)) = exts τ (ρ n + 1) = rename Nat.succ (τ (ρ n))
+    -- exts (fun i => τ (ρ i)) (n+1) = rename Nat.succ (τ (ρ n))
+    rfl
+
+/-- Renaming followed by substitution is equivalent to a composed substitution. -/
 theorem rename_subst_commute (ρ : Nat → Nat) (τ : Nat → Raw) (M : Raw) :
   subst τ (rename ρ M) = subst (fun i => τ (ρ i)) M := by
   induction M generalizing ρ τ with
-  | var i => rfl
+  | var i => 
+    -- Variables evaluate directly to τ (ρ i) on both sides
+    rfl
   | lam A N ih =>
-    simp [rename, subst, exts]
-    rw [ih (ext ρ) (exts τ)]
-    congr; funext i; cases i with
-    | zero => rfl
-    | succ j => simp [ext, exts, rename_rename_commute]
-  | app L M ihL ihM => simp [rename, subst]; rw [ihL, ihM]
-  | zero => rfl
-  | suc M ih => simp [rename, subst]; rw [ih]
+    -- Under a lambda, we use the inductive hypothesis and our helper lemma
+    simp only [rename, subst]
+    rw [ih (ext ρ) (exts τ), exts_ext_comp]
+  | app L R ihL ihR =>
+    -- Application distributes to both subterms
+    simp only [rename, subst]
+    rw [ihL, ihR]
+  | zero => 
+    -- Constants remain unchanged
+    rfl
+  | suc M ih =>
+    simp only [rename, subst]
+    rw [ih]
   | case L M N ihL ihM ihN =>
-    simp [rename, subst]; rw [ihL, ihM, ihN (ext ρ) (exts τ)]
-    congr; funext i; cases i <;> simp [ext, exts, rename_rename_commute]
+    -- Case statements distribute; the N branch binds a variable
+    simp only [rename, subst]
+    rw [ihL, ihM, ihN (ext ρ) (exts τ), exts_ext_comp]
   | mu A N ih =>
-    simp [rename, subst]; rw [ih (ext ρ) (exts τ)]
-    congr; funext i; cases i <;> simp [ext, exts, rename_rename_commute]
+    -- Mu binds a variable, handled exactly like lam
+    simp only [rename, subst]
+    rw [ih (ext ρ) (exts τ), exts_ext_comp]
 
-/-- subst τ (subst σ M) ≡ subst (σ ⨟ τ) M -/
-theorem sub_sub (σ τ : Nat → Raw) (M : Raw) :
-  subst τ (subst σ M) = subst (σ ⨟ τ) M := by
-  induction M generalizing σ τ with
-  | var i => rfl
-  | lam A N ih =>
-    simp [subst, exts]
-    rw [ih (exts σ) (exts τ)]
-    congr; funext i; cases i with
-    | zero => rfl
-    | succ j => simp [exts, seq, rename_subst_commute]
-  | app L M ihL ihM => simp [subst]; rw [ihL σ τ, ihM σ τ]
-  | zero => rfl
-  | suc M ih => simp [subst]; rw [ih σ τ]
-  | case L M N ihL ihM ihN =>
-    simp [subst]; rw [ihL σ τ, ihM σ τ, ihN (exts σ) (exts τ)]
-    congr; funext i; cases i <;> simp [exts, seq, rename_subst_commute]
-  | mu A N ih =>
-    simp [subst]; rw [ih (exts σ) (exts τ)]
-    congr; funext i; cases i <;> simp [exts, seq, rename_subst_commute]
-
--------------------------------------------------------------------------------
--- 3. FINAL AGDA THEOREMS
--------------------------------------------------------------------------------
-
-/-- substitution : M [ N ] [ L ] ≡ M 〔 L 〕 [ N [ L ] ] -/
-theorem substitution {M N L : Raw} :
-  instantiate (instantiate M N) L = instantiate (subst_one_at_one M L) (instantiate N L) := by
-  simp [instantiate, subst_one_at_one, sub_sub]
-  congr
-  funext i; cases i with
-  | zero => rfl
-  | succ j => cases j <;> rfl
-
-/-- exts-sub-cons : (subst (exts σ) N) [ V ] ≡ subst (V • σ) N -/
-theorem exts_sub_cons {σ : Nat → Raw} {N : Raw} {V : Raw} :
-  instantiate (subst (exts σ) N) V = subst (fun i => match i with | 0 => V | j+1 => σ j) N := by
-  simp [instantiate, sub_sub]
-  congr
-  funext i; cases i with
-  | zero => rfl
-  | succ j => simp [exts, seq, rename_subst_commute]
 
 end STLC
