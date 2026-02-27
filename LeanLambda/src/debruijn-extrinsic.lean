@@ -259,4 +259,114 @@ def progress {Γ : Context} {M : Raw} {A : Ty} (h : HasType Γ M A) :
 def progress_top {M : Raw} {A : Ty} (h : HasType [] M A) : ProgressResult M :=
   progress h rfl
 
+-- Ported from Agda: lecture-notes-Substitution
+
+-------------------------------------------------------------------------------
+-- 1. SIGMA-CALCULUS DEFINITIONS
+-------------------------------------------------------------------------------
+
+/-- Substitution sequencing (σ ⨟ τ): Applying τ to the result of σ -/
+def seq (σ₁ : Nat → Raw) (σ₂ : Nat → Raw) : Nat → Raw :=
+  fun i => subst σ₂ (σ₁ i)
+
+infixr:50 " ⨟ " => seq
+
+/-- Substitution for single term at index 1: N 〔 M 〕 -/
+def subst_one_at_one (N : Raw) (M : Raw) : Raw :=
+  subst (exts (fun i => match i with | 0 => M | j+1 => .var j)) N
+
+-------------------------------------------------------------------------------
+-- 2. CORE SUBSTITUTION THEOREMS
+-------------------------------------------------------------------------------
+
+/-- rename ρ₂ (rename ρ₁ M) ≡ rename (ρ₂ ∘ ρ₁) M -/
+theorem rename_rename_commute (ρ₁ ρ₂ : Nat → Nat) (M : Raw) :
+  rename ρ₂ (rename ρ₁ M) = rename (fun i => ρ₂ (ρ₁ i)) M := by
+  induction M generalizing ρ₁ ρ₂
+  case var i => rfl
+  case lam A N ih =>
+    simp [rename]
+    rw [ih (ext ρ₁) (ext ρ₂)]
+    have ext_comp : (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
+      funext i; cases i; rfl
+    congr; exact ext_comp
+  case app L M ihL ihM => simp [rename]; rw [ihL, ihM]
+  case zero => rfl
+  case suc M ih => simp [rename]; rw [ih]
+  case case L M N ihL ihM ihN =>
+    simp [rename]; rw [ihL, ihM]
+    rw [ihN (ext ρ₁) (ext ρ₂)]
+    have ext_comp : (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
+      funext i; cases i; rfl
+    congr; exact ext_comp
+  case mu A N ih =>
+    simp [rename]; rw [ih (ext ρ₁) (ext ρ₂)]
+    have ext_comp : (fun i => ext ρ₂ (ext ρ₁ i)) = ext (fun i => ρ₂ (ρ₁ i)) := by
+      funext i; cases i; rfl
+    congr; exact ext_comp
+
+/-- subst τ (rename ρ M) ≡ subst (τ ∘ ρ) M -/
+theorem rename_subst_commute (ρ : Nat → Nat) (τ : Nat → Raw) (M : Raw) :
+  subst τ (rename ρ M) = subst (fun i => τ (ρ i)) M := by
+  induction M generalizing ρ τ with
+  | var i => rfl
+  | lam A N ih =>
+    simp [rename, subst, exts]
+    rw [ih (ext ρ) (exts τ)]
+    congr; funext i; cases i with
+    | zero => rfl
+    | succ j => simp [ext, exts, rename_rename_commute]
+  | app L M ihL ihM => simp [rename, subst]; rw [ihL, ihM]
+  | zero => rfl
+  | suc M ih => simp [rename, subst]; rw [ih]
+  | case L M N ihL ihM ihN =>
+    simp [rename, subst]; rw [ihL, ihM, ihN (ext ρ) (exts τ)]
+    congr; funext i; cases i <;> simp [ext, exts, rename_rename_commute]
+  | mu A N ih =>
+    simp [rename, subst]; rw [ih (ext ρ) (exts τ)]
+    congr; funext i; cases i <;> simp [ext, exts, rename_rename_commute]
+
+/-- subst τ (subst σ M) ≡ subst (σ ⨟ τ) M -/
+theorem sub_sub (σ τ : Nat → Raw) (M : Raw) :
+  subst τ (subst σ M) = subst (σ ⨟ τ) M := by
+  induction M generalizing σ τ with
+  | var i => rfl
+  | lam A N ih =>
+    simp [subst, exts]
+    rw [ih (exts σ) (exts τ)]
+    congr; funext i; cases i with
+    | zero => rfl
+    | succ j => simp [exts, seq, rename_subst_commute]
+  | app L M ihL ihM => simp [subst]; rw [ihL σ τ, ihM σ τ]
+  | zero => rfl
+  | suc M ih => simp [subst]; rw [ih σ τ]
+  | case L M N ihL ihM ihN =>
+    simp [subst]; rw [ihL σ τ, ihM σ τ, ihN (exts σ) (exts τ)]
+    congr; funext i; cases i <;> simp [exts, seq, rename_subst_commute]
+  | mu A N ih =>
+    simp [subst]; rw [ih (exts σ) (exts τ)]
+    congr; funext i; cases i <;> simp [exts, seq, rename_subst_commute]
+
+-------------------------------------------------------------------------------
+-- 3. FINAL AGDA THEOREMS
+-------------------------------------------------------------------------------
+
+/-- substitution : M [ N ] [ L ] ≡ M 〔 L 〕 [ N [ L ] ] -/
+theorem substitution {M N L : Raw} :
+  instantiate (instantiate M N) L = instantiate (subst_one_at_one M L) (instantiate N L) := by
+  simp [instantiate, subst_one_at_one, sub_sub]
+  congr
+  funext i; cases i with
+  | zero => rfl
+  | succ j => cases j <;> rfl
+
+/-- exts-sub-cons : (subst (exts σ) N) [ V ] ≡ subst (V • σ) N -/
+theorem exts_sub_cons {σ : Nat → Raw} {N : Raw} {V : Raw} :
+  instantiate (subst (exts σ) N) V = subst (fun i => match i with | 0 => V | j+1 => σ j) N := by
+  simp [instantiate, sub_sub]
+  congr
+  funext i; cases i with
+  | zero => rfl
+  | succ j => simp [exts, seq, rename_subst_commute]
+
 end Extrinsic
