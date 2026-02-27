@@ -1,5 +1,5 @@
 -- Extrinsically typed STLC with de Bruijn indices
-namespace Extrinsic
+namespace STLC
 
 -------------------------------------------------------------------------------
 -- 1. SYNTAX & TYPES
@@ -369,4 +369,4 @@ theorem exts_sub_cons {σ : Nat → Raw} {N : Raw} {V : Raw} :
   | zero => rfl
   | succ j => simp [exts, seq, rename_subst_commute]
 
-end Extrinsic
+end STLC
