@@ -365,5 +365,176 @@ theorem rename_subst_commute (ρ : Nat → Nat) (τ : Nat → Raw) (M : Raw) :
     simp only [rename, subst]
     rw [ih (ext ρ) (exts τ), exts_ext_comp]
 
+/-- Helper 1: Commuting `ext` (renaming extension) and `exts` (substitution extension). -/
+theorem ext_exts_comp (ρ : Nat → Nat) (τ : Nat → Raw) :
+  (fun i => rename (ext ρ) (exts τ i)) = exts (fun i => rename ρ (τ i)) := by
+  funext i
+  cases i with
+  | zero => rfl
+  | succ j =>
+    -- Focus on the `succ` case and use `rename_rename_commute` twice
+    change rename (ext ρ) (rename Nat.succ (τ j)) = rename Nat.succ (rename ρ (τ j))
+    rw [rename_rename_commute, rename_rename_commute]
+    rfl
+
+/-- Helper 2: Renaming a substitution is equivalent to substituting with renamed terms. -/
+theorem rename_subst (ρ : Nat → Nat) (τ : Nat → Raw) (M : Raw) :
+  rename ρ (subst τ M) = subst (fun i => rename ρ (τ i)) M := by
+  induction M generalizing ρ τ with
+  | var i => rfl
+  | lam A N ih =>
+    simp only [rename, subst]
+    rw [ih, ext_exts_comp]
+  | app L R ihL ihR =>
+    simp only [rename, subst]
+    rw [ihL, ihR]
+  | zero => rfl
+  | suc M ih =>
+    simp only [rename, subst]
+    rw [ih]
+  | case L M N ihL ihM ihN =>
+    simp only [rename, subst]
+    rw [ihL, ihM, ihN, ext_exts_comp]
+  | mu A N ih =>
+    simp only [rename, subst]
+    rw [ih, ext_exts_comp]
+
+/-- Helper 3: Extending a composed substitution is the composition of extended substitutions. -/
+theorem exts_seq (σ τ : Nat → Raw) :
+  (exts σ ⨟ exts τ) = exts (σ ⨟ τ) := by
+  funext i
+  cases i with
+  | zero => rfl
+  | succ j =>
+    -- Simplify to expose the inner `rename` and `subst` applications
+    dsimp [seq, exts]
+    -- Use the previously proven commutation lemmas on both sides
+    rw [rename_subst_commute, rename_subst]
+    rfl
+
+/-- Main Theorem: Double substitution is equivalent to substituting a composed mapping. -/
+theorem sub_sub (σ τ : Nat → Raw) (M : Raw) :
+  subst τ (subst σ M) = subst (σ ⨟ τ) M := by
+  induction M generalizing σ τ with
+  | var i => 
+    rfl
+  | lam A N ih =>
+    simp only [subst]
+    rw [ih, exts_seq]
+  | app L R ihL ihR =>
+    simp only [subst]
+    rw [ihL, ihR]
+  | zero => 
+    rfl
+  | suc M ih =>
+    simp only [subst]
+    rw [ih]
+  | case L M N ihL ihM ihN =>
+    simp only [subst]
+    rw [ihL, ihM, ihN, exts_seq]
+  | mu A N ih =>
+    simp only [subst]
+    rw [ih, exts_seq]
+
+/-- Helper: Substitution with the variable constructor is the identity. -/
+theorem subst_id (M : Raw) : subst Raw.var M = M := by
+  induction M with
+  | var i => rfl
+  | lam A N ih =>
+    simp only [subst]
+    have h_exts : exts Raw.var = Raw.var := by
+      funext i; cases i <;> rfl
+    rw [h_exts, ih]
+  | app L R ihL ihR =>
+    simp only [subst]
+    rw [ihL, ihR]
+  | zero => rfl
+  | suc M ih =>
+    simp only [subst]
+    rw [ih]
+  | case L M N ihL ihM ihN =>
+    simp only [subst]
+    have h_exts : exts Raw.var = Raw.var := by
+      funext i; cases i <;> rfl
+    rw [h_exts, ihL, ihM, ihN]
+  | mu A N ih =>
+    simp only [subst]
+    have h_exts : exts Raw.var = Raw.var := by
+      funext i; cases i <;> rfl
+    rw [h_exts, ih]
+
+/-- The main substitution lemma: M[N][L] = M[L][N[L]] -/
+theorem substitution {M N L : Raw} :
+  single_subst (single_subst M N) L =
+    single_subst (subst_one_at_one M L) (single_subst N L) := by
+  -- Unfold the custom substitution definitions into raw `subst` applications
+  dsimp only [single_subst, subst_one_at_one]
+  
+  -- Apply our `sub_sub` lemma to both sides to fuse the double substitutions
+  rw [sub_sub, sub_sub]
+  
+  -- We prove the composed substitution environments are pointwise identical.
+  -- Using congrArg forces Lean to ONLY strip the outer `subst ... M`,
+  -- avoiding `congr`'s aggressive and destructive unifications.
+  apply congrArg (fun (σ : Nat → Raw) => subst σ M)
+  funext i
+  cases i with
+  | zero =>
+    -- Case i = 0: Both evaluate definitionally to `single_subst N L`
+    rfl
+  | succ j =>
+    cases j with
+    | zero =>
+      -- Case i = 1: 
+      -- The LHS evaluates cleanly to `L`.
+      -- The RHS evaluates to `subst τ (rename Nat.succ L)`.
+      -- We use `change` to bypass brittle unfolding tactics and let the kernel verify it.
+      change L = subst (fun x => match x with | 0 => single_subst N L | y+1 => Raw.var y) (rename Nat.succ L)
+      
+      -- Flip the equation to match the commutation lemma
+      symm
+      
+      -- Commute the renaming and substitution on the RHS
+      rw [rename_subst_commute]
+      
+      -- After commutation, the mapped function evaluates exactly to `Raw.var`.
+      change subst Raw.var L = L
+      
+      -- Apply our identity helper lemma backwards
+      exact subst_id L
+    | succ k =>
+      -- Case i = k + 2: Both mappings shift and evaluate nicely to `.var k`
+      rfl
+
+/-- Substituting into an extended substitution is equivalent to a single mapping. -/
+theorem exts_sub_cons {σ : Nat → Raw} {N : Raw} {V : Raw} :
+  single_subst (subst (exts σ) N) V =
+    subst (fun i => match i with | 0 => V | j+1 => σ j) N := by
+  -- Unfold the definition of single_subst
+  dsimp only [single_subst]
+  
+  -- Fuse the double substitution into a single composed substitution
+  rw [sub_sub]
+  
+  -- Apply congrArg to isolate the substitution environments
+  apply congrArg (fun (env : Nat → Raw) => subst env N)
+  funext i
+  cases i with
+  | zero => 
+    -- Case i = 0: Both evaluate to `V`
+    rfl
+  | succ j =>
+    -- Case i = j + 1:
+    -- The LHS evaluates to `subst τ (rename Nat.succ (σ j))`
+    dsimp only [seq, exts]
+    
+    -- Commute the rename and subst operations
+    rw [rename_subst_commute]
+    
+    -- The composed mapping function strictly evaluates to `Raw.var`
+    change subst Raw.var (σ j) = σ j
+    
+    -- Close the goal with our identity lemma
+    exact subst_id (σ j)
 
 end STLC
