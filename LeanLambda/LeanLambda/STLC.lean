@@ -19,6 +19,7 @@ inductive Raw where
   | zero : Raw
   | suc  : Raw → Raw
   | case : Raw → Raw → Raw → Raw
+  -- leave out mu because we want to prove termination
 
 -------------------------------------------------------------------------------
 -- 2. RENAMING & PARALLEL SUBSTITUTION
