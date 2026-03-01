@@ -25,6 +25,9 @@ inductive Raw where
 -- 2. RENAMING & PARALLEL SUBSTITUTION
 -------------------------------------------------------------------------------
 
+abbrev Rename := Nat → Nat
+abbrev Subst := Nat → Raw
+
 def ext (ρ : Nat → Nat) : Nat → Nat
   | 0     => 0
   | i + 1 => (ρ i) + 1
