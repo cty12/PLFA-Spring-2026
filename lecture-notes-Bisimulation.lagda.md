@@ -2,10 +2,14 @@
 module lecture-notes-Bisimulation where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_; refl; cong; cong₂)
-open import Function using (case_of_)
+                         using    (_≡_; refl; cong; cong₂)
+open import Function     using    (case_of_)
+open import Data.Product using    (∃-syntax; _×_; proj₁; proj₂)
+                         renaming (_,_ to ⟨_,_⟩)
 
 
+-- | We start with the intrinsically-typed STLC from the
+-- |   "DeBruijn" lecture but with `let` added.
 infix  4 _⊢_
 infix  4 _∋_
 infixl 5 _,_
@@ -274,7 +278,7 @@ if M ~ M† and M is a value then M† is also a value.
     ------------
   → Value V†
 ~val ~zero   V-zero = V-zero
-~val (~ƛ ~N) V-ƛ    = V-ƛ
+~val (~ƛ _)  V-ƛ    = V-ƛ
 ```
 
 The other direction is also true:
@@ -286,22 +290,23 @@ The other direction is also true:
     ------------
   → Value V
 ~val⁻¹ ~zero   V-zero = V-zero
-~val⁻¹ (~ƛ ~N) V-ƛ    = V-ƛ
+~val⁻¹ (~ƛ _)  V-ƛ    = V-ƛ
 ```
 
 Simulation commutes with renaming: if ρ maps any judgment Γ ∋ A to a judgment Δ ∋ A,
 and if M ~ M† then rename ρ M ~ rename ρ M†.
 
 ```
-~rename : ∀ {Γ Δ}
-  → (ρ : ∀ {A} → Γ ∋ A → Δ ∋ A)
-    ---------------------------------------------------------------
-  → (∀ {A} {M M† : Γ ⊢ A} → M ~ M† → rename ρ M ~ rename ρ M†)
-~rename ρ ~zero         =  ~zero
-~rename ρ (~`)          =  ~`
-~rename ρ (~ƛ ~N)       =  ~ƛ (~rename (ext ρ) ~N)
-~rename ρ (~L ~· ~M)    =  (~rename ρ ~L) ~· (~rename ρ ~M)
-~rename ρ (~let ~M ~N)  =  ~let (~rename ρ ~M) (~rename (ext ρ) ~N)
+~rename : ∀ {Γ Δ A} {M M† : Γ ⊢ A}
+  → (ρ : Γ →ʳ Δ)
+  → M ~ M†
+    ------------------------------
+  → rename ρ M ~ rename ρ M†
+~rename ρ ~zero            =  ~zero
+~rename ρ (~`)             =  ~`
+~rename ρ (~ƛ N~N†)        =  ~ƛ (~rename (ext ρ) N~N†)
+~rename ρ (L~L† ~· M~M†)   =  (~rename ρ L~L†) ~· (~rename ρ M~M†)
+~rename ρ (~let M~M† N~N†) =  ~let (~rename ρ M~M†) (~rename (ext ρ) N~N†)
 ```
 
 Simulation commutes with substitution: If σ and σ† both map any judgment Γ ∋ A to
@@ -309,36 +314,38 @@ a judgment Δ ⊢ A, such that for every x in Γ ∋ A we have σ x ~ σ† x,
 and if M ~ M†, then subst σ M ~ subst σ† M†.
 
 ```
-~exts : ∀ {Γ Δ}
-  → {σ  : ∀ {A} → Γ ∋ A → Δ ⊢ A}
-  → {σ† : ∀ {A} → Γ ∋ A → Δ ⊢ A}
-  → (∀ {A} → (x : Γ ∋ A) → σ x ~ σ† x)
-    --------------------------------------------------
-  → (∀ {A B} → (x : Γ , B ∋ A) → exts σ x ~ exts σ† x)
-~exts ~σ Z      =  ~`
-~exts ~σ (S x)  =  ~rename S_ (~σ x)
+infix 4 _∼_
 
-~subst : ∀ {Γ Δ}
-  → {σ  : ∀ {A} → Γ ∋ A → Δ ⊢ A}
-  → {σ† : ∀ {A} → Γ ∋ A → Δ ⊢ A}
-  → (∀ {A} → (x : Γ ∋ A) → σ x ~ σ† x)
-    ---------------------------------------------------------
-  → (∀ {A} {M M† : Γ ⊢ A} → M ~ M† → subst σ M ~ subst σ† M†)
-~subst ~σ ~zero         =  ~zero
-~subst ~σ (~` {x = x})  =  ~σ x
-~subst ~σ (~ƛ ~N)       =  ~ƛ (~subst (~exts ~σ) ~N)
-~subst ~σ (~L ~· ~M)    =  (~subst ~σ ~L) ~· (~subst ~σ ~M)
-~subst ~σ (~let ~M ~N)  =  ~let (~subst ~σ ~M) (~subst (~exts ~σ) ~N)
+_∼_ : ∀ {Γ Δ} → (σ σ† : Γ →ˢ Δ) → Set
+_∼_ {Γ} {Δ} σ σ† = ∀ {A} (x : Γ ∋ A) → σ x ~ σ† x
+
+~exts : ∀ {Γ Δ A} {σ σ† : Γ →ˢ Δ}
+  → σ ∼ σ†
+    ------------------------------------
+  → _∼_ {Γ , A} (exts σ) (exts σ†)
+~exts σ~σ† Z      =  ~`
+~exts σ~σ† (S x)  =  ~rename S_ (σ~σ† x)
+
+~subst : ∀ {Γ Δ A} {σ σ† : Γ →ˢ Δ} {M M† : Γ ⊢ A}
+  → σ ∼ σ†
+  → M ~ M†
+    ------------------------------
+  → subst σ M ~ subst σ† M†
+~subst σ~σ† ~zero            =  ~zero
+~subst σ~σ† (~` {x = x})     =  σ~σ† x
+~subst σ~σ† (~ƛ N~N†)        =  ~ƛ (~subst (~exts σ~σ†) N~N†)
+~subst σ~σ† (L~L† ~· M~M†)   =  (~subst σ~σ† L~L†) ~· (~subst σ~σ† M~M†)
+~subst σ~σ† (~let M~M† N~N†) =  ~let (~subst σ~σ† M~M†) (~subst (~exts σ~σ†) N~N†)
 
 ~sub : ∀ {Γ A B} {N N† : Γ , B ⊢ A} {M M† : Γ ⊢ B}
   → N ~ N†
   → M ~ M†
-    -----------------------
-  → (N [ M ]) ~ (N† [ M† ])
-~sub {Γ} {A} {B} ~N ~M = ~subst {Γ , B} {Γ} ~σ {A} ~N
+    ------------------------
+  → N [ M ] ~ N† [ M† ]
+~sub {Γ} {A} {B} N~N† M~M† = ~subst {Γ , B} {Γ} ~σ N~N†
   where
   ~σ : ∀ {A} → (x : Γ , B ∋ A) → _ ~ _
-  ~σ Z      =  ~M
+  ~σ Z      =  M~M†
   ~σ (S x)  =  ~`
 
 data Leg {Γ A} (M† N : Γ ⊢ A) : Set where
@@ -346,36 +353,36 @@ data Leg {Γ A} (M† N : Γ ⊢ A) : Set where
   leg : ∀ {N† : Γ ⊢ A}
     → N ~ N†
     → M† —→ N†
-      --------
+      ---------------
     → Leg M† N
 
+{- For each reduction step in the source,
+   we must show a corresponding reduction in the target. -}
 sim : ∀ {Γ A} {M M† N : Γ ⊢ A}
   → M ~ M†
   → M —→ N
-    ---------
-  → Leg  M† N
-sim ~`              ()
-sim (~ƛ ~N)         ()
-{- For each reduction step in the source,
-   we must show a corresponding reduction in the target. -}
-sim (~L ~· ~M)      (ξ-·₁ L—→)
-  with sim ~L L—→
-...  | leg ~L′ L†—→                 =  leg (~L′ ~· ~M)   (ξ-·₁ L†—→)
-sim (~V ~· ~M)      (ξ-·₂ VV M—→)
-  with sim ~M M—→
-...  | leg ~M′ M†—→                 =  leg (~V ~· ~M′)   (ξ-·₂ (~val ~V VV) M†—→)
-sim ((~ƛ ~N) ~· ~V) (β-ƛ VV)        =  leg (~sub ~N ~V)  (β-ƛ (~val ~V VV))
-sim (~let ~M ~N)    (ξ-let M—→)
-  with sim ~M M—→
-...  | leg ~M′ M†—→                 =  leg (~let ~M′ ~N) (ξ-·₂ V-ƛ M†—→)
-sim (~let ~V ~N)    (β-let VV)      =  leg (~sub ~N ~V)  (β-ƛ (~val ~V VV))
+    ------------
+  → Leg M† N
+sim (L~L† ~· M~M†) (ξ-·₁ L→L′) =
+  case sim L~L† L→L′ of λ where
+  (leg L′~L†′ L†→L†′) →
+    leg (L′~L†′ ~· M~M†) (ξ-·₁ L†→L†′)
+sim (V~V† ~· M~M†) (ξ-·₂ vV M→M′) =
+  case sim M~M† M→M′ of λ where
+  (leg M′~M†′ M†→M†′) →
+    leg (V~V† ~· M′~M†′) (ξ-·₂ (~val V~V† vV) M†→M†′)
+sim ((~ƛ N~N†) ~· V~V†) (β-ƛ vV) = leg (~sub N~N† V~V†) (β-ƛ (~val V~V† vV))
+sim (~let M~M† N~N†) (ξ-let M→M′) =
+  case sim M~M† M→M′ of λ where
+  (leg M′~M†′ M†→M†′) → leg (~let M′~M†′ N~N†) (ξ-·₂ V-ƛ M†→M†′)
+sim (~let V~V† N~N†) (β-let vV) = leg (~sub N~N† V~V†) (β-ƛ (~val V~V† vV))
 
 data Leg⁻¹ {Γ A} (M N† : Γ ⊢ A) : Set where
 
   leg : ∀ {N : Γ ⊢ A}
     → N ~ N†
     → M —→ N
-      --------
+      ---------------
     → Leg⁻¹ M N†
 
 sim⁻¹ : ∀ {Γ A} {M M† N† : Γ ⊢ A}
@@ -383,8 +390,6 @@ sim⁻¹ : ∀ {Γ A} {M M† N† : Γ ⊢ A}
   → M† —→ N†
     ---------------
   → Leg⁻¹ M N†
-sim⁻¹ ~` ()
-sim⁻¹ (~ƛ _) ()
 sim⁻¹ (L~L† ~· M~M†) (ξ-·₁ L†→L†′) =
   case sim⁻¹ L~L† L†→L†′ of λ where
   (leg L′~L†′ L→L′) → leg (L′~L†′ ~· M~M†) (ξ-·₁ L→L′)
@@ -398,4 +403,30 @@ sim⁻¹ (~let M~M† N~N†) (ξ-·₂ vλN† M†→M†′) =
   (leg M′~M†′ M→M′) → leg (~let M′~M†′ N~N†) (ξ-let M→M′)
 sim⁻¹ (~let M~M† N~N†) (β-ƛ vM†) =
   leg (~sub N~N† M~M†) (β-let (~val⁻¹ M~M† vM†))
+```
+
+(Alternatively, we could use an existential instead of the Leg datatype.)
+
+```
+-- if M ~ M† and M† —→ N† then M —→ N and N ~ N† for some N
+sim⁻¹′ : ∀ {Γ A} {M M† N† : Γ ⊢ A}
+  → M ~ M†
+  → M† —→ N†
+    ------------------------------
+  → ∃[ N ] N ~ N† × (M —→ N)
+sim⁻¹′ {M = L · M} (L~L† ~· M~M†) (ξ-·₁ L†→L†′) =
+  case sim⁻¹′ L~L† L†→L†′ of λ where
+  ⟨ L′ , ⟨ L′~L†′ , L→L′ ⟩ ⟩ →
+    ⟨ L′ · M , ⟨ L′~L†′ ~· M~M† , ξ-·₁ L→L′ ⟩ ⟩
+sim⁻¹′ {M = L · M} (L~L† ~· M~M†) (ξ-·₂ vL† M†→M†′) =
+  case sim⁻¹′ M~M† M†→M†′ of λ where
+  ⟨ M′ , ⟨ M′~M†′ , M→M′ ⟩ ⟩ →
+    ⟨ L · M′ , ⟨ L~L† ~· M′~M†′ , ξ-·₂ (~val⁻¹ L~L† vL†) M→M′ ⟩ ⟩
+sim⁻¹′ {M = (ƛ N) · M} ((~ƛ N~N†) ~· M~M†) (β-ƛ vM†) =
+  ⟨ N [ M ] , ⟨ (~sub N~N† M~M†) , (β-ƛ (~val⁻¹ M~M† vM†)) ⟩ ⟩
+sim⁻¹′ {M = `let M N} (~let M~M† N~N†) (ξ-·₂ vλN† M†→M†′) =
+  case sim⁻¹′ M~M† M†→M†′ of λ where
+  ⟨ M′ , ⟨ M′~M†′ , M→M′ ⟩ ⟩ → ⟨ `let M′ N , ⟨ ~let M′~M†′ N~N† , ξ-let M→M′ ⟩ ⟩
+sim⁻¹′ {M = `let M N} (~let M~M† N~N†) (β-ƛ vM†) =
+  ⟨ N [ M ] , ⟨ ~sub N~N† M~M† , β-let (~val⁻¹ M~M† vM†) ⟩ ⟩
 ```
