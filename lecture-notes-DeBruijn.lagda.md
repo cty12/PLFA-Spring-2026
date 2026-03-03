@@ -319,11 +319,6 @@ progress (μ N)                   =  step (β-μ)
 ## Evaluation
 
 ```
-data Gas : Set where
-  gas : ℕ → Gas
-```
-
-```
 data Finished {Γ A} (N : Γ ⊢ A) : Set where
 
    done :
@@ -353,15 +348,15 @@ or until the term becomes a value.
 
 ```
 eval : ∀ {A}
-  → Gas
+  → ℕ
   → (L : ∅ ⊢ A)
     -----------
   → Steps L
-eval (gas zero)    L                =  steps (L ∎) out-of-gas
-eval (gas (suc m)) L
+eval zero    L                =  steps (L ∎) out-of-gas
+eval (suc m) L
     with progress L
 ... | done VL                       =  steps (L ∎) (done VL)
 ... | step {M} L—→M
-        with eval (gas m) M
+        with eval m M
 ...     | steps M—↠N fin            =  steps (L —→⟨ L—→M ⟩ M—↠N) fin
 ```

@@ -1,7 +1,7 @@
 ```
 {-# OPTIONS --rewriting #-}
 
-module lecture-notes-More where
+module lecture-notes-More2 where
 ```
 
 # STLC + Primitives, Let, Arrays, and Errors
@@ -10,7 +10,6 @@ module lecture-notes-More where
 ## Imports
 
 ```
-import Syntax
 open import Data.Bool renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_)
 open import Data.Nat using (ℕ; zero; suc)
@@ -52,67 +51,11 @@ rep (base b) = base-rep b
 rep (b ⇒ p) = base-rep b → rep p
 ```
 
-## Terms
-
-We use the
-[abstract-binding-trees](https://github.com/jsiek/abstract-binding-trees)
-library to represent terms.
-
-```
-data Op : Set where
-  op-lam : Op
-  op-app : Op
-  op-rec : Op
-  op-const : (p : Prim) → rep p → Op
-  op-let : Op
-  op-insert : Op
-  op-empty  : Op
-  op-index : Op
-  op-error : Op
-
-sig : Op → List ℕ
-sig op-lam = 1 ∷ []
-sig op-app = 0 ∷ 0 ∷ []
-sig op-rec = 1 ∷ []
-sig (op-const p k) = []
-sig op-let = 0 ∷ 1 ∷ []
-sig op-insert = 0 ∷ 0 ∷ []
-sig op-empty = []
-sig op-index = 0 ∷ 0 ∷ []
-sig op-error = []
-
-open Syntax using (Rename; _•_; ↑; id; ext; ⦉_⦊)
-
-open Syntax.OpSig Op sig
-  using (`_; _⦅_⦆; cons; nil; bind; ast; _[_]; Subst; ⟪_⟫; ⟦_⟧; exts; rename)
-  renaming (ABT to Term)
-
-infixl 7  _·_
-
-pattern $ p k      = (op-const p k) ⦅ nil ⦆
-pattern ƛ N        = op-lam         ⦅ cons (bind (ast N)) nil ⦆
-pattern μ N        = op-rec         ⦅ cons (bind (ast N)) nil ⦆
-pattern _·_ L M    = op-app         ⦅ cons (ast L) (cons (ast M) nil) ⦆
-pattern `let L M   = op-let         ⦅ cons (ast L) (cons (bind (ast M)) nil) ⦆
-pattern _⦂⦂_ L M    = op-insert      ⦅ cons (ast L) (cons (ast M) nil) ⦆
-pattern 〈〉        = op-empty       ⦅ nil ⦆
-pattern _!_ L M    = op-index       ⦅ cons (ast L) (cons (ast M) nil) ⦆
-pattern error      = op-error       ⦅ nil ⦆
-```
-
-```
-sub-lam : ∀ (N : Term) (σ : Subst) → ⟪ σ ⟫ (ƛ N) ≡ ƛ (⟪ exts σ ⟫ N)
-sub-lam N σ = refl 
-
-sub-app : ∀ (L M : Term) (σ : Subst) → ⟪ σ ⟫ (L · M) ≡ (⟪ σ ⟫ L) · (⟪ σ ⟫ M)
-sub-app L M σ = refl
-```
-
 ## Types
 
 ```
 data Type : Set where
-  Nat   : Type
+  `ℕ   : Type
   Bool   : Type
   _⇒_   : Type → Type → Type
   Array _  : Type → Type
@@ -122,7 +65,7 @@ data Type : Set where
 
 ```
 typeof-base : Base → Type
-typeof-base B-Nat = Nat
+typeof-base B-Nat = `ℕ
 typeof-base B-Bool = Bool
 
 typeof : Prim → Type
@@ -157,73 +100,71 @@ data _∋_⦂_ : Context → ℕ → Type → Set where
 
 
 ```
-infix  4  _⊢_⦂_
+infix  4  _⊢_
 
-data _⊢_⦂_ : Context → Term → Type → Set where
+data _⊢_ : Context → Type → Set where
 
-  -- Axiom 
-  ⊢` : ∀ {Γ x A}
+  -- variables
+  `_ : ∀ {Γ x A}
     → Γ ∋ x ⦂ A
       -----------
-    → Γ ⊢ ` x ⦂ A
+    → Γ ⊢ A
 
   -- ⇒-I 
-  ⊢ƛ : ∀ {Γ N A B}
-    → Γ , A ⊢ N ⦂ B
-      -------------------
-    → Γ ⊢ ƛ N ⦂ A ⇒ B
+  ƛ_ : ∀ {Γ A B}
+    → Γ , A ⊢ B
+      ----------
+    → Γ ⊢ A ⇒ B
 
   -- ⇒-E
-  ⊢· : ∀ {Γ L M A B}
-    → Γ ⊢ L ⦂ A ⇒ B
-    → Γ ⊢ M ⦂ A
-      -------------
-    → Γ ⊢ L · M ⦂ B
+  _·_ : ∀ {Γ A B}
+    → Γ ⊢ A ⇒ B
+    → Γ ⊢ A
+      ------
+    → Γ ⊢ B
 
-  ⊢μ : ∀ {Γ M A}
-    → Γ , A ⊢ M ⦂ A
-      -----------------
-    → Γ ⊢ μ M ⦂ A
+  μ_ : ∀ {Γ A}
+    → Γ , A ⊢ A
+      ---------
+    → Γ ⊢ A
 
-  ⊢$ : ∀{Γ A}{p : Prim}{k : rep p}
-     → A ≡ typeof p
-       -------------
-     → Γ ⊢ $ p k ⦂ A
+  $ : ∀{Γ}{A} (p : Prim) (k : rep p)
+       -----------------------------
+     → Γ ⊢ typeof p
 
-  ⊢let : ∀{Γ A B M N}
-    → Γ ⊢ M ⦂ A
-    → Γ , A ⊢ N ⦂ B
-      -----------------
-    → Γ ⊢ `let M N ⦂ B
+  `let : ∀{Γ A B}
+    → Γ ⊢ A
+    → Γ , A ⊢ B
+      ---------
+    → Γ ⊢ B
 
-  ⊢empty : ∀{Γ A}
-      ------------------
-    → Γ ⊢ 〈〉 ⦂ Array A
+  〈〉 : ∀{Γ A}
+      -----------
+    → Γ ⊢ Array A
 
-  ⊢insert : ∀{Γ A M Ms}
-    → Γ ⊢ M ⦂ A
-    → Γ ⊢ Ms ⦂ Array A
-      ----------------------
-    → Γ ⊢ (M ⦂⦂ Ms) ⦂ Array A
+  _⦂⦂_ : ∀{Γ A}
+    → Γ ⊢ A
+    → Γ ⊢ Array A
+      -----------
+    → Γ ⊢ Array A
 
-  ⊢! : ∀{Γ A Ms N}
-    → Γ ⊢ Ms ⦂ Array A
-    → Γ ⊢ N ⦂ Nat
-      ----------------
-    → Γ ⊢ Ms ! N ⦂ A
+  _!_ : ∀{Γ A}
+    → Γ ⊢ Array A
+    → Γ ⊢ `ℕ
+      -----------
+    → Γ ⊢ A
 
-  ⊢error : ∀ {Γ A}
-      -------------
-    → Γ ⊢ error ⦂ A
+  error : ∀ {Γ A}
+      -----------
+    → Γ ⊢ A
 ```
-
 
 ## Values
 
 ```
-data Value : Term → Set where
+data Value : ∀{Γ A} → Γ ⊢ A → Set where
 
-  V-ƛ : ∀ {N : Term}
+  V-ƛ : ∀{Γ A B} {N : Γ , A ⊢ B}
       ---------------------------
     → Value (ƛ N)
 
@@ -233,7 +174,7 @@ data Value : Term → Set where
 
   V-〈〉 : Value 〈〉
 
-  V-⦂⦂ : ∀ {V Vs : Term}
+  V-⦂⦂ : ∀ {Γ A} {V : Γ ⊢ A}{Vs : Γ ⊢ Array A}
     → Value V
     → Value Vs
       -----------------
@@ -249,20 +190,20 @@ the notion of a _frame_, which controls how reduction can occur inside
 of each term constructor. Think of the `□` symbol is a hole in the term.
 
 ```
-data Frame : Set where
-  □·_ : Term → Frame
-  _·□ : (M : Term) → (v : Value M) → Frame
-  □⦂⦂_ : Term → Frame
-  _⦂⦂□ : (M : Term) → (v : Value M) → Frame
-  □!_ : Term → Frame
-  _!□ : Term → Frame
-  let□ : Term → Frame
+data Frame : ∀ (A B : Type) → Set where
+  □·_ : ∀{A B C} → ∅ ⊢ A → Frame (A ⇒ B) B
+  _·□ : ∀{A B C} → (M : ∅ ⊢ A ⇒ B) → (v : Value M) → Frame A B
+  □⦂⦂_ : ∀{A} → ∅ ⊢ Array A → Frame A (Array A)
+  _⦂⦂□ : ∀{A} → (M : ∅ ⊢ A) → (v : Value M) → Frame (Array A) (Array A)
+  □!_ : ∀{A} → ∅ ⊢ `ℕ → Frame (Array A) A
+  _!□ : ∀{A} → ∅ ⊢ Array A → Frame `ℕ A
+  let□ : ∀{A B} → ∅ , A ⊢ B → Frame A B
 ```
 
 The `plug` function fills a frame's hole with a term.
 
 ```
-plug : Term → Frame → Term
+plug : ∀{A B} → ∅ ⊢ A → Frame A B → ∅ ⊢ B
 plug L (□· M)        = L · M
 plug M ((L ·□) v)    = L · M
 plug M (□⦂⦂ N)       = M ⦂⦂ N
@@ -277,7 +218,7 @@ plug M (let□ N)      = `let M N
 ```
 infix 4 _—→_
 
-data _—→_ : Term → Term → Set where
+data _—→_ : ∀{A} → ∅ ⊢ A → ∅ ⊢ A → Set where
 
   ξ : ∀ {M M′}
     → (F : Frame)
@@ -312,10 +253,9 @@ data _—→_ : Term → Term → Set where
       ------------------------------------------
     → (V ⦂⦂ Vs) ! ($ _ (suc i)) —→  Vs ! ($ _ i)
 
-  β-index-error : ∀ {V}
-    → Value V
+  β-index-error : ∀ {N}
       -----------------
-    → 〈〉 ! V —→ error
+    → 〈〉 ! N —→ error
 
   β-let : ∀{V N}
     → Value V
@@ -363,7 +303,7 @@ canonical-fun : ∀{V A B}
     ----------
   → Function V
 canonical-fun ⊢V V-ƛ = Fun-ƛ
-canonical-fun (⊢$ {p = base B-Nat} ()) (V-const {_} {k})
+canonical-fun (⊢$ {p = base B-`ℕ} ()) (V-const {_} {k})
 canonical-fun (⊢$ {p = base B-Bool} ()) (V-const {_} {k})
 canonical-fun (⊢$ {p = b ⇒ p} eq) (V-const {_} {k}) = Fun-prim
 
@@ -376,13 +316,13 @@ canonical-base : ∀{b V A}
   → Value V
     ------------
   → Constant b V
-canonical-base {B-Nat} () (⊢ƛ ⊢V) V-ƛ
+canonical-base {B-`ℕ} () (⊢ƛ ⊢V) V-ƛ
 canonical-base {B-Bool} () (⊢ƛ ⊢V) V-ƛ
-canonical-base {B-Nat} eq (⊢$ {p = base B-Nat} refl) V-const = base-const
+canonical-base {B-`ℕ} eq (⊢$ {p = base B-`ℕ} refl) V-const = base-const
 canonical-base {B-Bool} eq (⊢$ {p = base B-Bool} refl) V-const = base-const
-canonical-base {B-Nat} refl (⊢$ {p = b' ⇒ p} ()) V-const
+canonical-base {B-`ℕ} refl (⊢$ {p = b' ⇒ p} ()) V-const
 canonical-base {B-Bool} refl (⊢$ {p = b' ⇒ p} ()) V-const
-canonical-base {B-Nat} () (⊢insert ⊢V ⊢V₁) (V-⦂⦂ vV vV₁)
+canonical-base {B-`ℕ} () (⊢insert ⊢V ⊢V₁) (V-⦂⦂ vV vV₁)
 canonical-base {B-Bool} () (⊢insert ⊢V ⊢V₁) (V-⦂⦂ vV vV₁)
 
 data IsArray : Term → Set where
@@ -393,7 +333,7 @@ canonical-array : ∀ {Ms A}
   → ∅ ⊢ Ms ⦂ Array A
   → Value Ms
   → IsArray Ms
-canonical-array (⊢$ {p = base B-Nat} ()) V-const
+canonical-array (⊢$ {p = base B-`ℕ} ()) V-const
 canonical-array (⊢$ {p = base B-Bool} ()) V-const
 canonical-array ⊢empty V-〈〉 = array-empty
 canonical-array (⊢insert ⊢M ⊢Ms) (V-⦂⦂ VM VMs) =
@@ -586,7 +526,7 @@ plug-inversion {M} {(N ⦂⦂□) v} {.(Array _)} (⊢insert {A = A} ⊢N ⊢M) 
 plug-inversion {M} {□! i} {A} (⊢! ⊢M ⊢N) =
     ⟨ (Array A) , ⟨ ⊢M , (λ M' z → ⊢! z ⊢N) ⟩ ⟩
 plug-inversion {M} {Ms !□} {A} (⊢! ⊢M ⊢N) =
-    ⟨ Nat , ⟨ ⊢N , (λ M' → ⊢! ⊢M) ⟩ ⟩
+    ⟨ `ℕ , ⟨ ⊢N , (λ M' → ⊢! ⊢M) ⟩ ⟩
 plug-inversion {M} {let□ N} {A} (⊢let {A = A'} ⊢M ⊢N) =
     ⟨ A' , ⟨ ⊢M , (λ M' z → ⊢let z ⊢N) ⟩ ⟩
 ```

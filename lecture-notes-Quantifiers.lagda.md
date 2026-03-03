@@ -6,7 +6,7 @@ open import Data.Nat.Properties
 open import Relation.Binary.PropositionalEquality
    using (_≡_; _≢_; refl; sym; subst; cong)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Empty using (⊥-elim)
 ```
 
 # Quantifiers
@@ -279,29 +279,4 @@ less-eq? (suc m) (suc n)
     with less-eq? m n
 ... | yes m≤n = yes (s≤s m≤n)
 ... | no m≰n = no λ { (s≤s m≤n) →  m≰n m≤n }
-```
-
-```
-open import Data.Unit using (⊤; tt)
-
-T : ∀ {a} {A : Set a} → Dec A → Set
-T (yes _) = ⊤
-T (no  _) = ⊥
-
-minus : (m n : ℕ) (n≤m : n ≤ m) → ℕ
-minus m       zero    _         = m
-minus (suc m) (suc n) (s≤s n≤m) = minus m n n≤m
-
-_ : minus 5 3 (s≤s (s≤s (s≤s z≤n))) ≡ 2
-_ = refl
-
-toWitness : ∀ {A : Set} {D : Dec A} → T D → A
-toWitness {A} {yes x} tt  =  x
-toWitness {A} {no ¬x} ()
-
-_-_ : (m n : ℕ) {n≤m : T (n ≤? m)} → ℕ
-_-_ m n {n≤m} = minus m n (toWitness n≤m)
-
-_ : 5 - 3 ≡ 2
-_ = refl
 ```

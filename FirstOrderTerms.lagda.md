@@ -1,4 +1,6 @@
 ```
+{-# OPTIONS --rewriting #-}
+
 open import Agda.Primitive using (lzero)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Bool using (Bool; true; false; _∨_)
@@ -10,7 +12,7 @@ open import Data.Nat.Properties
   using (m≤m+n; m≤n+m; ≤-step; ≤-pred; n≤1+n; 1+n≰n; ≤-refl; +-comm; +-assoc;
          +-mono-≤; ≤-reflexive; ≤∧≢⇒<) {-≤⇒≤′; ≤′⇒≤; ≤-trans)-}
 open Data.Nat.Properties.≤-Reasoning
-  using (_≤⟨_⟩_)
+--  using (_≤⟨_⟩_)
   renaming (begin_ to begin≤_; _∎ to _QED)
 open import Data.Product using (_×_; Σ; Σ-syntax; ∃; ∃-syntax; proj₁; proj₂)
    renaming (_,_ to ⟨_,_⟩)
@@ -21,7 +23,7 @@ open import Relation.Nullary using (Dec; yes; no; ¬_)
 open import Relation.Binary.PropositionalEquality
    using (_≡_; _≢_; refl; sym; inspect; [_]; cong; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning
-   using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
+--   using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 open import FiniteSet
 
 module FirstOrderTerms
@@ -130,10 +132,10 @@ occurs? x (op ⦅ Ms ⦆) = occurs-vec? x Ms
 occurs-vec? x {zero} [] = no (∉∅ {x})
 occurs-vec? x {suc n} (M ∷ Ms)
     with occurs? x M
-... | yes x∈M = yes ((p⊆p∪q _ _) {x} x∈M)
+... | yes x∈M = yes ((p⊆p∪q (vars M) (vars-vec Ms)) {x} x∈M)
 ... | no x∉M
     with occurs-vec? x Ms
-... | yes x∈Ms = yes ((q⊆p∪q _ _) {x} x∈Ms)
+... | yes x∈Ms = yes ((q⊆p∪q (vars M) _) {x} x∈Ms)
 ... | no x∉Ms = no G
     where
     G : ¬ x ∈ vars M ∪ vars-vec Ms
@@ -258,11 +260,11 @@ x∉domσ→no-lookup : ∀{σ}{x}
 x∉domσ→no-lookup {[]} {x} x∉σ = refl
 x∉domσ→no-lookup {⟨ ` y , M ⟩ ∷ σ} {x} x∉σ
     with x ≟ y
-... | yes refl = ⊥-elim (x∉σ (p⊆p∪q _ _ (x∈⁅x⁆ y)))
+... | yes refl = ⊥-elim (x∉σ (p⊆p∪q (⁅ y ⁆) (dom σ) (x∈⁅x⁆ y)))
 ... | no x≠y =
-    x∉domσ→no-lookup {σ}{x} λ x∈σ → x∉σ (q⊆p∪q _ _ x∈σ)
+    x∉domσ→no-lookup {σ}{x} λ x∈σ → x∉σ (q⊆p∪q ⁅ y ⁆ (dom σ) x∈σ)
 x∉domσ→no-lookup {⟨ op ⦅ Ls ⦆ , M ⟩ ∷ σ} {x} x∉σ =
-    x∉domσ→no-lookup {σ}{x} λ x∈σ → x∉σ (q⊆p∪q _ _ x∈σ)
+    x∉domσ→no-lookup {σ}{x} λ x∈σ → x∉σ (q⊆p∪q (vars-vec Ls) (dom σ) x∈σ)
 ```
 
 ```
@@ -292,10 +294,10 @@ M∩domσ⊆∅→subst-vec-id {suc n} {M ∷ Ms} {σ} M∩domσ⊆∅
     cong₂ _∷_ (M∩domσ⊆∅→subst-id Mσ⊆∅) (M∩domσ⊆∅→subst-vec-id {n}{Ms}{σ} Msσ⊆∅)
     where
     Mσ⊆∅ : vars M ∩ dom σ ⊆ ∅
-    Mσ⊆∅ {x} x∈M∩domσ = M∩domσ⊆∅ {x} (p⊆p∪q _ _ {x} x∈M∩domσ)
+    Mσ⊆∅ {x} x∈M∩domσ = M∩domσ⊆∅ {x} (p⊆p∪q (vars M ∩ dom σ) (vars-vec Ms ∩ dom σ) {x} x∈M∩domσ)
 
     Msσ⊆∅ : vars-vec Ms ∩ dom σ ⊆ ∅
-    Msσ⊆∅ {x} x∈Ms∩domσ = M∩domσ⊆∅ {x} (q⊆p∪q _ _ {x} x∈Ms∩domσ)
+    Msσ⊆∅ {x} x∈Ms∩domσ = M∩domσ⊆∅ {x} (q⊆p∪q (vars M ∩ dom σ) (vars-vec Ms ∩ dom σ) {x} x∈Ms∩domσ)
 
 M∩domσ⊆∅→subst-id {` x} {σ} M∩domσ⊆∅ = x∉domσ→subst-id {σ} G
     where
@@ -344,7 +346,7 @@ vars-subst-∪ {` y} {x} {M}
 ... | yes refl =
     begin⊆
     vars M                   ⊆⟨ ∪-identityʳ₁ (vars M) ⟩
-    vars M ∪ ∅               ⊆⟨ p⊆r→q⊆s→p∪q⊆r∪s ⊆-refl ∅⊆p ⟩
+    vars M ∪ ∅               ⊆⟨ p⊆r→q⊆s→p∪q⊆r∪s{p = vars M}{∅}{vars M} ⊆-refl ∅⊆p ⟩
     vars M ∪ (⁅ y ⁆ - ⁅ y ⁆)
     ■
 ... | no xy =
@@ -398,7 +400,7 @@ vars-eqs-subst-∪ {⟨ L , N ⟩ ∷ eqs} {x} {M} =
       | ∪-idem (vars M)
       | sym (∪-assoc (vars M) (vars M) (((vars L ∪ vars N) ∪ vars-eqs eqs) - ⁅ x ⁆))
       | ∪-idem (vars M)
-      | ∪-assoc (vars L) (vars N) (vars-eqs eqs) = refl
+      | ∪-assoc (vars L) (vars N) (vars-eqs eqs) = {!!}
 ```
 
 
@@ -482,12 +484,12 @@ M∩domσ⊆∅ {x} {M} {(⟨ ` y , N ⟩ ∷ σ)} {eqs} (insert x₁ x₂ x₃ 
         J : x ∈ (⁅ x ⁆ ∪ vars M ∪ vars-eqs eqs) ∩ (⁅ y ⁆ ∪ dom σ)
         J = proj₂ (∈∩ x _ _ ) ⟨ (p⊆p∪q _ _ (x∈⁅x⁆ x)) , (q⊆p∪q _ _ x∈domσ) ⟩
     H : vars M ∩ (⁅ y ⁆ ∪ dom ([ M / x ] σ)) ⊆ ∅
-    H {z} z∈
-        with proj₁ (∈∩ z _ _) z∈
-    ... | ⟨ z∈M , z∈[y]∪domσ ⟩
-        rewrite subst-dom{x}{M}{σ} x∉domσ =
-        sub {z} ((proj₂ (∈∩ z _ _) ⟨ (p⊆r→p⊆q∪r _ _ _ ⊆-refl (p⊆q→p⊆q∪r _ _ _ ⊆-refl z∈M)) ,
-                                     z∈[y]∪domσ ⟩))
+    H {z} z∈ = {!!}
+    --     with proj₁ (∈∩ z _ _) z∈
+    -- ... | ⟨ z∈M , z∈[y]∪domσ ⟩
+    --     rewrite subst-dom{x}{M}{σ} x∉domσ =
+    --     sub {z} ((proj₂ (∈∩ z _ _) ⟨ (p⊆r→p⊆q∪r _ _ _ ⊆-refl (p⊆q→p⊆q∪r _ _ _ ⊆-refl z∈M)) ,
+    --                                  z∈[y]∪domσ ⟩))
     G : vars M ∩ dom ([ M / x ] (⟨ ` y , N ⟩ ∷ σ)) ⊆ ∅
     G
         with x ≟ y
