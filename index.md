@@ -111,7 +111,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
     * Extend the bidirectional typing functions `synthesize` and `inherit`
       to handle products and sums.
 
-* Do the `variants` exercise in
+* March 10, Do the `variants` exercise in
    [Subtyping and Records](./lecture-notes-Subtyping.lagda.md).
 
 * Do the `products` exercise in

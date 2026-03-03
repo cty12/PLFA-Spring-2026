@@ -360,118 +360,6 @@ mutual
         .forall_ (conceal (lift env) B)
 end -- mutual
 
--------------------------------------------------------------------------------
--- Coercion Precision Relation
--------------------------------------------------------------------------------
-
-inductive CoercPrecision : Nat → Env → Env → Coercion → Ty → Ty → Coercion → Ty → Ty → Prop
-
-  -- id ⊑ id
-  | id_prec_id {numTyVars env_psi env1 env2 A A'} :
-      TypePrecision numTyVars env_psi A A' →
-      CoercPrecision numTyVars env1 env2 .id A A .id A' A'
-
-  -- ↦ ⊑ ↦
-  | fn_prec_fn {numTyVars env1 env2 A B C D A' B' C' D' c d c' d'} :
-      CoercPrecision numTyVars env1 env2 c C A c' C' A' →
-      CoercPrecision numTyVars env1 env2 d B D d' B' D' →
-      CoercPrecision numTyVars env1 env2 (.fn c d) (.fn A B) (.fn C D) (.fn c' d') (.fn A' B') (.fn C' D')
-
-  -- ⨟ ⊑ ⨟
-  | seq_prec_seq {numTyVars env1 env2 A B C A' B' C' c d c' d'} :
-      CoercPrecision numTyVars env1 env2 c A B c' A' B' →
-      CoercPrecision numTyVars env1 env2 d B C d' B' C' →
-      CoercPrecision numTyVars env1 env2 (.seq c d) A C (.seq c' d') A' C'
-
-  -- ! ⊑ !
-  | inj_prec_inj {numTyVars env1 env2 G} :
-      CoercPrecision numTyVars env1 env2 (.inj G) (Grnd.toTy G) .dyn (.inj G) (Grnd.toTy G) .dyn
-
-  -- ? ⊑ ?
-  | proj_prec_proj {numTyVars env1 env2 G} :
-      CoercPrecision numTyVars env1 env2 (.proj G) .dyn (Grnd.toTy G) (.proj G) .dyn (Grnd.toTy G)
-
-  -- ? ⊑ ↦
-  | proj_prec_fn {numTyVars env_psi env1 env2 A' B' C' D' c' d'} :
-      TypePrecision numTyVars env_psi .dyn (.fn A' B') →
-      TypePrecision numTyVars env_psi (.fn .dyn .dyn) (.fn C' D') →
-      CoercPrecision numTyVars env1 env2 (.proj .fn) .dyn (.fn .dyn .dyn) (.fn c' d') (.fn A' B') (.fn C' D')
-
-  -- ! ⊑ ↦
-  | inj_prec_fn {numTyVars env_psi env1 env2 A' B' C' D' c' d'} :
-      TypePrecision numTyVars env_psi (.fn .dyn .dyn) (.fn A' B') →
-      TypePrecision numTyVars env_psi .dyn (.fn C' D') →
-      CoercPrecision numTyVars env1 env2 (.inj .fn) (.fn .dyn .dyn) .dyn (.fn c' d') (.fn A' B') (.fn C' D')
-
-  -- ? ⊑ id
-  | proj_prec_id {numTyVars env_psi env1 env2 G A'} :
-      TypePrecision numTyVars env_psi (Grnd.toTy G) A' →
-      CoercPrecision numTyVars env1 env2 (.proj G) .dyn (Grnd.toTy G) .id A' A'
-
-  -- id ⊑ ?
-  | id_prec_proj {numTyVars env_psi env1 env2 G A} :
-      TypePrecision numTyVars env_psi A (Grnd.toTy G) →
-      CoercPrecision numTyVars env1 env2 .id A A (.proj G) .dyn (Grnd.toTy G)
-
-  -- ! ⊑ id
-  | inj_prec_id {numTyVars env_psi env1 env2 G A'} :
-      TypePrecision numTyVars env_psi (Grnd.toTy G) A' →
-      CoercPrecision numTyVars env1 env2 (.inj G) (Grnd.toTy G) .dyn .id A' A'
-
-  -- id ⊑ !
-  | id_prec_inj {numTyVars env_psi env1 env2 G A} :
-      TypePrecision numTyVars env_psi A (Grnd.toTy G) →
-      CoercPrecision numTyVars env1 env2 .id A A (.inj G) (Grnd.toTy G) .dyn
-
-  -- ⨟ ⊑
-  | seq_prec_right {numTyVars env1 env2 A B C A' C' c d c'} :
-      CoercPrecision numTyVars env1 env2 c A B c' A' C' →
-      CoercPrecision numTyVars env1 env2 d B C c' A' C' →
-      CoercPrecision numTyVars env1 env2 (.seq c d) A C c' A' C'
-
-  -- ⊑ ⨟
-  | left_prec_seq {numTyVars env1 env2 A C A' B' C' c c' d'} :
-      CoercPrecision numTyVars env1 env2 c A C c' A' B' →
-      CoercPrecision numTyVars env1 env2 c A C d' B' C' →
-      CoercPrecision numTyVars env1 env2 c A C (.seq c' d') A' C'
-
-  -- id ⊑ ↦
-  | id_prec_fn {numTyVars env1 env2 A B A' B' C' D' c' d'} :
-      CoercPrecision numTyVars env1 env2 .id A A c' C' A' →
-      CoercPrecision numTyVars env1 env2 .id B B d' B' D' →
-      CoercPrecision numTyVars env1 env2 .id (.fn A B) (.fn A B) (.fn c' d') (.fn A' B') (.fn C' D')
-
-  -- id ⊑ ∀ (Generalized to any type A)
-  | id_prec_forall {numTyVars env1 env2 A A' B' c'} :
-      CoercPrecision (numTyVars + 1) (lift env1) (lift env2) .id (liftTy A) (liftTy A) c' A' B' →
-      CoercPrecision numTyVars env1 env2 .id A A (.forall_ c') (.univ A') (.univ B')
-
-  -- id ⊑ 𝒢 (Generalized to any type A)
-  | id_prec_gen {numTyVars env1 env2 A A' B' c'} :
-      CoercPrecision (numTyVars + 1) (lift env1) (lift env2) .id (liftTy A) (liftTy A) c' (liftTy A') B' →
-      CoercPrecision numTyVars env1 env2 .id A A (.gen c') A' (.univ B')
-
-  -- id ⊑ ℐ (Generalized to any type A)
-  | id_prec_inst {numTyVars env1 env2 A A' B' c'} :
-      CoercPrecision (numTyVars + 1) (lift env1) ((0, .dyn) :: lift env2) .id (liftTy A) (liftTy A) c' A' (liftTy B') →
-      CoercPrecision numTyVars env1 env2 .id A A (.inst c') (.univ A') B'
-
-
--- Environment Precision Relation
--- EnvPrecision numTyVars env1 env2 means env1 ⊑ env2
-inductive EnvPrecision : Nat → Env → Env → Prop
-
-  -- The empty environment is precise to the empty environment
-  | nil {numTyVars : Nat} :
-      EnvPrecision numTyVars [] []
-
-  -- If env1 ⊑ env2, and type A ⊑ B, we can extend both environments 
-  -- with the same variable X bound to A and B respectively.
-  | cons {numTyVars : Nat} {env1 env2 : Env} {X : Nat} {A B : Ty} :
-      EnvPrecision numTyVars env1 env2 →
-      TypePrecision numTyVars env1 A B →
-      EnvPrecision numTyVars ((X, A) :: env1) ((X, B) :: env2)
-
 /-- 
   Lifting an environment maps `liftTy` over the bound types, 
   but leaves the term variable IDs (x) unchanged.
@@ -585,6 +473,26 @@ noncomputable def lift_type_prec {numTyVars : Nat} {env : Env} {A A' : Ty}
   -- depends strictly on the primary environment context `env1`.
   exact rename_type_prec (fun i => i + 1) hPrec
 
+-- Environment Precision Relation
+-- EnvPrecision numTyVars env1 env2 means env1 ⊑ env2
+inductive EnvPrecision : Nat → Env → Env → Prop
+
+  -- The empty environment is precise to the empty environment
+  | nil {numTyVars : Nat} :
+      EnvPrecision numTyVars [] []
+
+  -- If env1 ⊑ env2, and type A ⊑ B, we can extend both environments 
+  -- with the same variable X bound to A and B respectively.
+  | cons {numTyVars : Nat} {env1 env2 : Env} {X : Nat} {A B : Ty} :
+      EnvPrecision numTyVars env1 env2 →
+      TypePrecision numTyVars env1 A B →
+      EnvPrecision numTyVars ((X, A) :: env1) ((X, B) :: env2)
+
+  -- Allow extending ONLY the left environment with a .dyn binding
+  | cons_left_dyn {numTyVars : Nat} {env1 env2 : Env} {X : Nat} :
+      EnvPrecision numTyVars env1 env2 →
+      EnvPrecision numTyVars ((X, Ty.dyn) :: env1) env2
+
 -- Lifting preserves environment precision
 theorem lift_env_prec {numTyVars : Nat} {env1 env2 : Env}
   (h : EnvPrecision numTyVars env1 env2) : 
@@ -601,6 +509,68 @@ theorem lift_env_prec {numTyVars : Nat} {env1 env2 : Env}
       · exact ih
       · exact lift_type_prec h_prec
 
+  | cons_left_dyn h_env => sorry
+
+/-- Predicate identifying leaf/atomic coercions that rely on TypePrecision. -/
+inductive IsAtomic : Coercion → Prop where
+  | id       : IsAtomic .id
+  | inj  G   : IsAtomic (.inj G)
+  | proj H   : IsAtomic (.proj H)
+  | seal X   : IsAtomic (.seal_ X)
+  | unseal X : IsAtomic (.unseal_ X)
+
+inductive CoercPrecision : Nat → Env → Env → Coercion → Ty → Ty → Coercion → Ty → Ty → Prop where
+
+  /-- Left-side Atomic: Handles IsAtomic c1 ⊑ (any non-sequence c2). -/
+  | atomic_prec_l {numTyVars env_psi env1 env2 c1 c2 A B A' B'} :
+      IsAtomic c1 → 
+      (∀ c3 c4, c2 ≠ .seq c3 c4) → 
+      TypePrecision numTyVars env_psi A A' →
+      TypePrecision numTyVars env_psi B B' →
+      CoercPrecision numTyVars env1 env2 c1 A B c2 A' B'
+
+  /-- Right-side Atomic: Handles (any non-sequence c1) ⊑ IsAtomic c2. -/
+  | atomic_prec_r {numTyVars env_psi env1 env2 c1 c2 A B A' B'} :
+      IsAtomic c2 → 
+      (∀ c3 c4, c1 ≠ .seq c3 c4) → 
+      TypePrecision numTyVars env_psi A A' →
+      TypePrecision numTyVars env_psi B B' →
+      CoercPrecision numTyVars env1 env2 c1 A B c2 A' B'
+
+  -- Structural rules (Same constructor on both sides)
+  | fn_prec_fn {numTyVars env1 env2 A B C D A' B' C' D' c d c' d'} :
+      CoercPrecision numTyVars env1 env2 c C A c' C' A' →
+      CoercPrecision numTyVars env1 env2 d B D d' B' D' →
+      CoercPrecision numTyVars env1 env2 (.fn c d) (.fn A B) (.fn C D) (.fn c' d') (.fn A' B') (.fn C' D')
+
+  | forall_prec_forall {numTyVars env1 env2 A B A' B' c c'} :
+      CoercPrecision (numTyVars + 1) (lift env1) (lift env2) c A B c' A' B' →
+      CoercPrecision numTyVars env1 env2 (.forall_ c) (.univ A) (.univ B) (.forall_ c') (.univ A') (.univ B')
+
+  | gen_prec_gen {numTyVars env1 env2 A A' B B' c c'} :
+      CoercPrecision (numTyVars + 1) (lift env1) (lift env2) c (liftTy A) B c' (liftTy A') B' →
+      CoercPrecision numTyVars env1 env2 (.gen c) A (.univ B) (.gen c') A' (.univ B')
+
+  | inst_prec_inst {numTyVars env1 env2 A B A' B' c c'} :
+      CoercPrecision (numTyVars + 1) ((0, Ty.dyn) :: lift env1) ((0, Ty.dyn) :: lift env2) c A (liftTy B) c' A' (liftTy B') →
+      CoercPrecision numTyVars env1 env2 (.inst c) (.univ A) B (.inst c') (.univ A') B'
+
+  -- Sequence rules (Decomposition)
+  | seq_prec_seq {numTyVars env1 env2 A B C A' B' C' c d c' d'} :
+      CoercPrecision numTyVars env1 env2 c A B c' A' B' →
+      CoercPrecision numTyVars env1 env2 d B C d' B' C' →
+      CoercPrecision numTyVars env1 env2 (.seq c d) A C (.seq c' d') A' C'
+
+  | seq_prec_right {numTyVars env1 env2 A B C A' C' c d c'} :
+      CoercPrecision numTyVars env1 env2 c A B c' A' C' →
+      CoercPrecision numTyVars env1 env2 d B C c' A' C' →
+      CoercPrecision numTyVars env1 env2 (.seq c d) A C c' A' C'
+
+  | left_prec_seq {numTyVars env1 env2 A C A' B' C' c c' d'} :
+      CoercPrecision numTyVars env1 env2 c A C c' A' B' →
+      CoercPrecision numTyVars env1 env2 c A C d' B' C' →
+      CoercPrecision numTyVars env1 env2 c A C (.seq c' d') A' C'
+
 theorem toCoercion_preserves_precision {numTyVars : Nat} {env1 env2 : Env} 
   {A B A' B' : Ty}
   (hEnv : EnvPrecision numTyVars env1 env2)
@@ -608,6 +578,31 @@ theorem toCoercion_preserves_precision {numTyVars : Nat} {env1 env2 : Env}
   (hB : TypePrecision numTyVars env1 B B')
   (cs1 : ConsistentSubtyping numTyVars env1 A B)
   (cs2 : ConsistentSubtyping numTyVars env2 A' B') :
-  CoercPrecision numTyVars env1 env2 (toCoercion env1 cs1) A B (toCoercion env2 cs2) A' B' := by sorry
-
-end PolyCoercions
+  CoercPrecision numTyVars env1 env2 (toCoercion env1 cs1) A B (toCoercion env2 cs2) A' B' := by
+  induction cs1 generalizing A' B' with
+  | nat_sub_nat =>
+    sorry
+  | var_sub_var =>
+    sorry
+  | dyn_sub_dyn =>
+    sorry
+  | dyn_sub_var h_lookup =>
+    sorry
+  | var_sub_dyn h_lookup =>
+    sorry
+  | dyn_sub_nat =>
+    sorry
+  | nat_sub_dyn =>
+    sorry
+  | fn_sub_dyn hC hD ihC ihD =>
+    sorry
+  | dyn_sub_fn hC hD ihC ihD =>
+    sorry
+  | fn_sub_fn hC hD ihC ihD =>
+    sorry
+  | univ_sub_univ h ih =>
+    sorry
+  | sub_univ h ih =>
+    sorry
+  | univ_sub h ih =>
+    sorry
