@@ -245,7 +245,7 @@ data _~_ : ∀ {Γ A} → Γ ⊢ A → Γ ⊢ A → Set where
     → M ~ M†
     → N ~ N†
       ---------------------------
-    → `let M N ~ (ƛ N†) · M†
+    → `let M N ~ ((ƛ N†) · M†)    -- !!
 ```
 
 We now show that M † ≡ N implies M ~ N, and conversely.
