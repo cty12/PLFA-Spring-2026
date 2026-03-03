@@ -365,13 +365,10 @@ sim⁻¹ (L~L† ~· M~M†) (ξ-·₁ L†→L†′) =
 sim⁻¹ (L~L† ~· M~M†) (ξ-·₂ vL† M†→M†′) =
   case sim⁻¹ M~M† M†→M†′ of λ where
   (leg M′~M†′ M→M′) → leg (L~L† ~· M′~M†′) (ξ-·₂ (~val⁻¹ L~L† vL†) M→M′)
-sim⁻¹ ((~ƛ N~N†) ~· M~M†) (β-ƛ vM†) =
-  leg (~sub N~N† M~M†) (β-ƛ (~val⁻¹ M~M† vM†))
 sim⁻¹ (~let M~M† N~N†) (ξ-·₂ vλN† M†→M†′) =
   case sim⁻¹ M~M† M†→M†′ of λ where
   (leg M′~M†′ M→M′) → leg (~let M′~M†′ N~N†) (ξ-let M→M′)
-sim⁻¹ (~let M~M† N~N†) (β-ƛ vM†) =
-  leg (~sub N~N† M~M†) (β-let (~val⁻¹ M~M† vM†))
+sim⁻¹ M~M† (β-ƛ v) = {!!}
 ```
 
 (Alternatively, we could use an existential instead of the Leg datatype.)
