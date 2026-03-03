@@ -210,9 +210,9 @@ Ideas for project language features:
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) | [link](./lecture-notes-Bisimulation.lagda.md) |
 |          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus |
 |          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus |
-|          | 12  | Spring Break, no class |
+|          | 12  | [BigStep](https://plfa.github.io/BigStep/) Call-by-name Evaluation of the Lambda Calculus  |
 |          | 17  | Spring Break, no class |
-|          | 19  | [BigStep](https://plfa.github.io/BigStep/) Call-by-name Evaluation of the Lambda Calculus  |
+|          | 19  | Spring Break, no class |
 |          | 24  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
 |          | 26  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
 |          | 31  | [Compositional](https://plfa.github.io/Compositional/)  |
