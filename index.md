@@ -213,16 +213,16 @@ Ideas for project language features:
 |          | 12  | [BigStep](https://plfa.github.io/BigStep/) Call-by-name Evaluation of the Lambda Calculus  |
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
-|          | 24  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
-|          | 26  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
-|          | 31  | [Compositional](https://plfa.github.io/Compositional/)  |
-| April    |  2  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
-|          |  7  | [Adequacy](https://plfa.github.io/Adequacy/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+8%2C+Adequacy+of+Denotational+Semantics+with+respect+to+Operational+Semantics/1_1eoqorgy) |
-|          |  9  | [ContextualEquivalence](https://plfa.github.io/ContextualEquivalence/) and [ScottNumeralsPlus](./ScottNumeralsPlus.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+13%2C+Contextual+Equivalence%2C+Addition+of+Scott+Numerals/1_xidyzfa5)|
-|          | 14  | [Unification](./Unification.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+15A+Scott+Numerals+continuedB+Unification/1_s9t5bm7r)  |
-|          | 16  | [Unification](./Unification.lagda.md) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+20A+Unification+continued/1_s965cxmw) |
-|          | 21  | [TypeInference](./TypeInference.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+22A+Type+Inference/1_dzkr4hhs) |
-|          | 23  | [Gradual Typing](./GradualTyping.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd) |
-|          | 28  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) 
+|          | 24  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) 
+|          | 26  | [Gradual Typing](./GradualTyping.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)| 
+|          | 31  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
+| April    |  2  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
+|          |  7  | [Compositional](https://plfa.github.io/Compositional/)  |
+|          |  9  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
+|          | 14  | [Adequacy](https://plfa.github.io/Adequacy/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+8%2C+Adequacy+of+Denotational+Semantics+with+respect+to+Operational+Semantics/1_1eoqorgy) |
+|          | 16  | [ContextualEquivalence](https://plfa.github.io/ContextualEquivalence/) and [ScottNumeralsPlus](./ScottNumeralsPlus.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+13%2C+Contextual+Equivalence%2C+Addition+of+Scott+Numerals/1_xidyzfa5)|
+|          | 21  | [Unification](./Unification.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+15A+Scott+Numerals+continuedB+Unification/1_s9t5bm7r)  |
+|          | 23  | [Unification](./Unification.lagda.md) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+20A+Unification+continued/1_s965cxmw) |
+|          | 28  | [TypeInference](./TypeInference.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+22A+Type+Inference/1_dzkr4hhs) |
 |          | 30  | TBD
 
