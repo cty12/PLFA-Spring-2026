@@ -210,7 +210,7 @@ Ideas for project language features:
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) | [link](./lecture-notes-Bisimulation.lagda.md) |
 |          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](./lambda/)
 |          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus |
-|          | 12  |   |
+|          | 12  | Confluence continued |
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
 |          | 24  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) 
