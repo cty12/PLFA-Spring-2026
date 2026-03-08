@@ -1121,7 +1121,7 @@ The typing rules for these terms are
 
     (T-Variant)
     Γ ⊢ M : A
-    ---------------------------------
+    ----------------
     Γ ⊢ 〈l=M〉 : 〈l=A〉
 
 
