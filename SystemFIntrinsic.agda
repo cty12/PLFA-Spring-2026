@@ -4,6 +4,7 @@ open import Agda.Builtin.Equality using (_≡_; refl)
 open import Relation.Binary.PropositionalEquality
             using    (_≡_; refl; cong; cong₂; sym; trans)
             renaming (subst to substEq)
+open import Function using (case_of_)
 
 infixr 7 _⇒_
 infixl 5 _,_
@@ -481,4 +482,29 @@ data _—→_ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ} → Δ ; Γ ⊢ A → Δ �
 -- | Progress | --
 ------------------
 
-{- TBA -}
+data Progress {A} (M : ∅ ; ∅ ⊢ A) : Set where
+
+  step : ∀ {N : ∅ ; ∅ ⊢ A}
+    → M —→ N
+      ------------
+    → Progress M
+
+  done :
+      Value M
+      ----------
+    → Progress M
+
+progress : ∀ {A} → (M : ∅ ; ∅ ⊢ A) → Progress M
+progress `zero = done V-zero
+progress (ƛ A ˙ N) = done V-ƛ
+progress (Λ N) = done V-Λ
+progress (L · M) = case progress L of λ where
+  (step L→L′) → step (ξ-·₁ L→L′)
+  (done vL) → case progress M of λ where
+    (step M→M′) → step (ξ-·₂ vL M→M′)
+    (done vM) → case vL of λ where
+      V-ƛ → step (β-ƛ vM)
+progress (M ∙ B) = case progress M of λ where
+  (step M→M′) → step (ξ-∙ M→M′)
+  (done vM) → case vM of λ where
+    V-Λ → step β-Λ
