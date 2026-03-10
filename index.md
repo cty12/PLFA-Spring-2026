@@ -114,7 +114,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
 * March 10, Do the `variants` exercise in
    [Subtyping and Records](./lecture-notes-Subtyping.lagda.md).
 
-* Do the `products` exercise in
+* March 24, Do the `products` exercise in
    [Bisimulation](https://plfa.github.io/Bisimulation/)
    and the `big-alt-implies-multi` exercise
    in [BigStep](https://plfa.github.io/BigStep/).
@@ -209,7 +209,7 @@ Ideas for project language features:
 |          | 26  | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) | [link](./lecture-notes-Subtyping.lagda.md)
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) | [link](./lecture-notes-Bisimulation.lagda.md) |
 |          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](./lambda/)
-|          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus |
+|          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus | [link](./lambda/FullBetaConfluence.agda)
 |          | 12  | Confluence continued |
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
