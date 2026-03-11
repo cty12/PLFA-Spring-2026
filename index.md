@@ -114,7 +114,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
 * March 10, Do the `variants` exercise in
    [Subtyping and Records](./lecture-notes-Subtyping.lagda.md).
 
-* Do the `products` exercise in
+* March 24, Do the `products` exercise in
    [Bisimulation](https://plfa.github.io/Bisimulation/)
    and the `big-alt-implies-multi` exercise
    in [BigStep](https://plfa.github.io/BigStep/).
@@ -208,9 +208,9 @@ Ideas for project language features:
 |          | 24 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference | [link](./lecture-notes-Bidirectional.lagda.md)
 |          | 26  | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) | [link](./lecture-notes-Subtyping.lagda.md)
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) | [link](./lecture-notes-Bisimulation.lagda.md) |
-|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus |
-|          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus |
-|          | 12  | [BigStep](https://plfa.github.io/BigStep/) Call-by-name Evaluation of the Lambda Calculus  |
+|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](./lambda/)
+|          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus | [link](./lambda/FullBetaConfluence.agda)
+|          | 12  | Confluence continued |
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
 |          | 24  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) 

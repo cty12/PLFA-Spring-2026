@@ -6,7 +6,7 @@ open import Data.Nat.Properties
 open import Relation.Binary.PropositionalEquality
    using (_≡_; _≢_; refl; sym; subst; cong)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Empty using (⊥-elim)
+open import Data.Empty using (⊥; ⊥-elim)
 ```
 
 # Quantifiers

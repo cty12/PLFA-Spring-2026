@@ -14,7 +14,7 @@ open import Data.Product.Base using (_×_; Σ; Σ-syntax; ∃; ∃-syntax; proj�
 open import Function.Base using (_∘_)
 open import lecture-notes-Untyped
   using (Var; Term; `_; ′_; ƛ_; _·_; subst; subst-zero; exts; rename; _[_];
-       β; ξ₁; ξ₂; ζ; _—→_; _—↠_; step—→; _—→⟨_⟩_; _∎; —↠-trans; appL-cong; lam-cong;
+       β; ξ₁; ξ₂; ζ; _—→_; _—↠_; step—→; _—→⟨_⟩_; _∎; —↠-trans; appL-cong; app-cong; lam-cong;
        Neutral; Normal; Rename; Subst)
 ```
 
@@ -65,7 +65,7 @@ big-step-to-reduction (⇓-app{L}{M}{N}{V} L⇓λN NM⇓V) =
 big-step-to-reduction (⇓-app-neutral L⇓ nL′ M⇓) =
   let IH1 = big-step-to-reduction L⇓ in
   let IH2 = big-step-to-reduction M⇓ in
-  {!!}
+  app-cong IH1 IH2
 ```
 
 ```agda

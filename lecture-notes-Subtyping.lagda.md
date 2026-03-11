@@ -1120,9 +1120,9 @@ and the term for eliminating a variant is
 The typing rules for these terms are
 
     (T-Variant)
-    Γ ⊢ Mⱼ : Aⱼ
-    ---------------------------------
-    Γ ⊢ 〈lⱼ=Mⱼ〉 : 〈l₁=A₁, ... , lᵤ=Aᵤ〉
+    Γ ⊢ M : A
+    ----------------
+    Γ ⊢ 〈l=M〉 : 〈l=A〉
 
 
     (T-Case)

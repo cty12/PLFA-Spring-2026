@@ -234,12 +234,41 @@ begin M—↠N = M—↠N
 ```
 
 ```agda
+infixr 2 _—↠⟨_⟩_
+
+_—↠⟨_⟩_ : ∀ (L : Term) {M N : Term}
+    → L —↠ M
+    → M —↠ N
+      ---------
+    → L —↠ N
+L —↠⟨ L—↠M ⟩ M—↠N = —↠-trans L—↠M M—↠N
+```
+
+```agda
 appL-cong : ∀ {L L' M : Term}
          → L —↠ L'
            ---------------
          → L · M —↠ L' · M
 appL-cong {L}{L'}{M} (L ∎) = L · M ∎
 appL-cong {L}{L'}{M} (L —→⟨ r ⟩ rs) = L · M —→⟨ ξ₁ r ⟩ appL-cong rs
+```
+
+```agda
+appR-cong : ∀ {L M M' : Term}
+         → M —↠ M'
+           ---------------
+         → L · M —↠ L · M'
+appR-cong {L}{M}{M'} (M ∎) = L · M ∎
+appR-cong {L}{M}{M'} (M —→⟨ r ⟩ rs) = step—→ (L · M) (appR-cong rs) (ξ₂ r)
+```
+
+```agda
+app-cong : ∀ {L L' M M' : Term}
+         → L —↠ L'
+         → M —↠ M'
+           ----------------
+         → L · M —↠ L' · M'
+app-cong {L}{L'}{M}{M'} L→L' M→M' = —↠-trans (appL-cong L→L') (appR-cong M→M')
 ```
 
 ```agda
