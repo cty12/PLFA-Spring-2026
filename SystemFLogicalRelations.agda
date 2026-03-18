@@ -41,11 +41,8 @@ extendRelSub : ∀ {Δ}
 (extendRelSub ρ A₁ A₂ R) .ρR (S α)  = ρR ρ α
 
 emptyRelSub : RelSub ∅
-emptyTySub : ∅ ⇒ˢ ∅
-emptyTySub = idᵗ
-
-(emptyRelSub .ρ₁) = emptyTySub
-(emptyRelSub .ρ₂) = emptyTySub
+(emptyRelSub .ρ₁) = idᵗ
+(emptyRelSub .ρ₂) = idᵗ
 (emptyRelSub .ρR) ()
 
 -- Section 4.3's V⟦ A ⟧ρ.
@@ -102,11 +99,8 @@ record RelEnv {Δ} (Γ : Ctx Δ) (ρ : RelSub Δ) : Set₁ where
 open RelEnv public
 
 emptyRelEnv : ∀ {ρ : RelSub ∅} → RelEnv ∅ ρ
-emptySub : ∅ →ˢ ∅
-emptySub = id
-
-(emptyRelEnv .γ₁) = emptySub
-(emptyRelEnv .γ₂) = emptySub
+(emptyRelEnv .γ₁) = id
+(emptyRelEnv .γ₂) = id
 (emptyRelEnv .γv₁) ()
 (emptyRelEnv .γv₂) ()
 (emptyRelEnv .γR) ()
@@ -123,8 +117,7 @@ postulate
   fundamental : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A) → LogicalRel M M
 
 postulate
-  close-empty-id : ∀ {A} (M : ∅ ; ∅ ⊢ A)
-    → substEq (_ ; ∅ ⊢_) (sub-idᵗ A) (subst emptySub (substᵀ emptyTySub M)) ≡ M
+  close-empty-id : ∀ {A} (M : ∅ ; ∅ ⊢ A) → subst id (substᵀ idᵗ M) ≡ M
 
 fundamental-id : ∀ (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z)) → ExprRel (`∀ (` Z ⇒ ` Z)) emptyRelSub M M
 fundamental-id M = substEq

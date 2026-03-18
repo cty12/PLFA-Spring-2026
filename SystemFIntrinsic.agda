@@ -463,6 +463,11 @@ exts : ∀ {Δ} {Γ Δ' : Ctx Δ} {A : Type Δ}
 exts σ Z      = ` Z
 exts σ (S x)  = ⇑ (σ x)
 
+exts-id-id : ∀ {Δ Γ A B} (x : Γ , A ∋ B) → exts {A = A} (id {Δ} {Γ}) x ≡ id {Δ} {Γ , A} x
+exts-id-id Z      = refl
+exts-id-id (S x)  = refl
+{-# REWRITE exts-id-id #-}
+
 ⇑ᵀ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ} → Δ ; Γ ⊢ A → Δ ,α ; ⇑ᶜ Γ ⊢ renameᵗ S_ A
 ⇑ᵀ = renameᵀ S_
 
@@ -486,6 +491,42 @@ subst σ (`proj₁ M)   = `proj₁ (subst σ M)
 subst σ (`proj₂ M)   = `proj₂ (subst σ M)
 subst σ (Λ N)        = Λ (subst (⇑ˢ σ) N)
 subst σ (M ∙ B)      = subst σ M ∙ B
+
+subst-cong : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ} {σ τ : Γ →ˢ Γ'}
+  → (∀ {B} (x : Γ ∋ B) → σ x ≡ τ x)
+  → (M : Δ ; Γ ⊢ A)
+  → subst σ M ≡ subst τ M
+subst-cong σ≡τ `zero         = refl
+subst-cong σ≡τ (` x)         = σ≡τ x
+subst-cong σ≡τ (ƛ A ˙ M)     = cong (ƛ A ˙_) (subst-cong σ≡τ′ M)
+  where
+  σ≡τ′ : ∀ {B} (x : _ , A ∋ B) → exts _ x ≡ exts _ x
+  σ≡τ′ Z      = refl
+  σ≡τ′ (S x)  = cong ⇑ (σ≡τ x)
+subst-cong σ≡τ (L · M)       = cong₂ _·_ (subst-cong σ≡τ L) (subst-cong σ≡τ M)
+subst-cong σ≡τ (`⟨ L , M ⟩)  = cong₂ `⟨_,_⟩ (subst-cong σ≡τ L) (subst-cong σ≡τ M)
+subst-cong σ≡τ (`proj₁ M)    = cong `proj₁ (subst-cong σ≡τ M)
+subst-cong σ≡τ (`proj₂ M)    = cong `proj₂ (subst-cong σ≡τ M)
+subst-cong σ≡τ (Λ M)         = cong Λ_ (subst-cong (⇑ˢ-cong σ≡τ) M)
+  where
+  ⇑ˢ-cong : ∀ {Δ} {Γ Γ' : Ctx Δ} {σ τ : Γ →ˢ Γ'}
+    → (∀ {A} (x : Γ ∋ A) → σ x ≡ τ x)
+    → ∀ {A} (x : ⇑ᶜ Γ ∋ A) → ⇑ˢ σ x ≡ ⇑ˢ τ x
+  ⇑ˢ-cong {Γ = ∅} σ≡τ ()
+  ⇑ˢ-cong {Γ = Γ , B} σ≡τ Z      = cong ⇑ᵀ (σ≡τ Z)
+  ⇑ˢ-cong {Γ = Γ , B} σ≡τ (S x)  = ⇑ˢ-cong (λ y → σ≡τ (S y)) x
+subst-cong σ≡τ (M ∙ B)       = cong (λ N → N ∙ B) (subst-cong σ≡τ M)
+
+-- id-id : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A) → subst id M ≡ M
+-- id-id `zero = refl
+-- id-id (` x) = refl
+-- id-id (ƛ A ˙ M) = cong (ƛ A ˙_) (trans (subst-cong exts-id-id M) (id-id M))
+-- id-id (M · M₁) rewrite id-id M | id-id M₁ = refl
+-- id-id `⟨ M , M₁ ⟩ rewrite id-id M | id-id M₁ = refl
+-- id-id (`proj₁ M) rewrite id-id M = refl
+-- id-id (`proj₂ M) rewrite id-id M = refl
+-- id-id (Λ M) = {!!}
+-- id-id (M ∙ B) rewrite id-id M = refl
 
 infixr 5 _⨟_
 
