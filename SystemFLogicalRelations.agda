@@ -4,7 +4,6 @@ module SystemFLogicalRelations where
 
 open import Relation.Binary.PropositionalEquality
   using (_≡_; refl; cong; cong₂; sym; trans)
-  renaming (subst to substEq)
 open import Data.Product using (Σ-syntax; ∃-syntax; _×_)
   renaming (_,_ to ⟨_,_⟩)
 open import Agda.Builtin.Unit using (⊤)
@@ -162,12 +161,6 @@ swap-inst : ∀ {A B}
   → ∅ ; ∅ ⊢ ((A `× B) ⇒ (B `× A))
 swap-inst {A} {B} M = (M ∙ A) ∙ B
 
-fundamental-swap : ∀ (M : ∅ ; ∅ ⊢ SwapTy) → ExprRel SwapTy emptyRelSub M M
-fundamental-swap M = substEq
-    (λ □ → ExprRel SwapTy emptyRelSub □ □)
-    (close-empty-id M)
-    (fundamental M emptyRelSub emptyRelEnv)
-
 swap-input-related : ∀ {A B}
   → {V : ∅ ; ∅ ⊢ A}
   → {W : ∅ ; ∅ ⊢ B}
@@ -190,7 +183,7 @@ free-theorem-swap : ∀ {A B : Type ∅}
     ---------------------------------------------
   → (swap-inst M · `⟨ V , W ⟩) —↠ `⟨ W , V ⟩
 free-theorem-swap {A} {B} M V W v w =
-  case fundamental-swap M of λ where
+  case fundamental M emptyRelSub emptyRelEnv of λ where
   ⟨ Λ N₁ , ⟨ Λ N₂ , ⟨ V-Λ , ⟨ V-Λ , ⟨ M↠ΛN₁ , ⟨ M↠ΛN₂ , rel₁ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
     case rel₁ A B (singletonRel V W) of λ where
     ⟨ Λ N₁′ , ⟨ Λ N₂′ , ⟨ V-Λ , ⟨ V-Λ , ⟨ N₁[A]↠ΛN₁′ , ⟨ N₂[B]↠ΛN₂′ , rel₂ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
