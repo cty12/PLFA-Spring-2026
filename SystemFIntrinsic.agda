@@ -11,6 +11,12 @@ open import Relation.Binary.PropositionalEquality
             renaming (subst to substEq)
 open import Function using (case_of_)
 
+postulate
+  extensionality : ∀ {A B : Set} {f g : A → B}
+    → (∀ (x : A) → f x ≡ g x)
+      -----------------------
+    → f ≡ g
+
 infixr 8 _`×_
 infixr 7 _⇒_
 infixr 6 _•ᵗ_
@@ -372,6 +378,7 @@ substCtx-extsᵗ-⇑ᶜ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') (Γ : Ctx Δ)
   → substCtx (extsᵗ σ) (⇑ᶜ Γ) ≡ ⇑ᶜ (substCtx σ Γ)
 substCtx-extsᵗ-⇑ᶜ σ ∅ = refl
 substCtx-extsᵗ-⇑ᶜ σ (Γ , A) rewrite substCtx-extsᵗ-⇑ᶜ σ Γ = refl
+{-# REWRITE substCtx-extsᵗ-⇑ᶜ #-}
 
 substᵀ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') {Γ : Ctx Δ} {A : Type Δ}
   → Δ ; Γ ⊢ A
@@ -383,7 +390,7 @@ substᵀ σ (L · M)           = substᵀ σ L · substᵀ σ M
 substᵀ σ (`⟨ L , M ⟩)      = `⟨ substᵀ σ L , substᵀ σ M ⟩
 substᵀ σ (`proj₁ M)        = `proj₁ (substᵀ σ M)
 substᵀ σ (`proj₂ M)        = `proj₂ (substᵀ σ M)
-substᵀ σ (Λ N)             = Λ (substEq (_ ;_⊢ _) (substCtx-extsᵗ-⇑ᶜ σ _) (substᵀ (extsᵗ σ) N))
+substᵀ σ (Λ N)             = Λ (substᵀ (extsᵗ σ) N)
 substᵀ σ (M ∙ A)           = substᵀ σ M ∙ substᵗ σ A
 
 substCtx-σ₀-⇑ᶜ-cancel : ∀ {Δ} (Γ : Ctx Δ) (B : Type Δ)
@@ -406,6 +413,9 @@ _[_]ᵀ N B = substᵀ (σ₀ᵗ B) N
 
 _→ʳ_ : ∀ {Δ} → Ctx Δ → Ctx Δ → Set
 _→ʳ_ Γ Δ = ∀ {A} → Γ ∋ A → Δ ∋ A
+
+idʳ : ∀ {Δ} {Γ : Ctx Δ} → Γ →ʳ Γ
+idʳ x = x
 
 ext : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ}
   → Γ →ʳ Γ'
@@ -437,6 +447,9 @@ rename ρ (M ∙ B)      = rename ρ M ∙ B
 _→ˢ_ : ∀ {Δ} → Ctx Δ → Ctx Δ → Set
 _→ˢ_ Γ Γ' = ∀ {A} → Γ ∋ A → _ ; Γ' ⊢ A
 
+ren : ∀ {Δ} {Γ Γ' : Ctx Δ} → Γ →ʳ Γ' → Γ →ˢ Γ'
+ren ρ x = ` (ρ x)
+
 infixr 6 _•_
 
 _•_ : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ}
@@ -463,9 +476,10 @@ exts : ∀ {Δ} {Γ Δ' : Ctx Δ} {A : Type Δ}
 exts σ Z      = ` Z
 exts σ (S x)  = ⇑ (σ x)
 
-exts-id-id : ∀ {Δ Γ A B} (x : Γ , A ∋ B) → exts {A = A} (id {Δ} {Γ}) x ≡ id {Δ} {Γ , A} x
-exts-id-id Z      = refl
-exts-id-id (S x)  = refl
+exts-id-id : ∀ {Δ Γ A B} → exts {A = A} (id {Δ} {Γ}) {B} ≡ id {Δ} {Γ , A} {B}
+exts-id-id = extensionality λ where
+  Z      → refl
+  (S x)  → refl
 {-# REWRITE exts-id-id #-}
 
 ⇑ᵀ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ} → Δ ; Γ ⊢ A → Δ ,α ; ⇑ᶜ Γ ⊢ renameᵗ S_ A
@@ -477,6 +491,35 @@ exts-id-id (S x)  = refl
 ⇑ˢ {Γ = ∅} σ ()
 ⇑ˢ {Γ = Γ , A} σ Z       = ⇑ᵀ (σ Z)
 ⇑ˢ {Γ = Γ , A} σ (S x)   = ⇑ˢ (λ y → σ (S y)) x
+
+private
+  ⇑ʳ-S : ∀ {Δ} {Γ Γ' : Ctx Δ} {C : Type Δ} {B : Type (Δ ,α)}
+    → (ρ : Γ →ʳ Γ')
+    → (x : ⇑ᶜ Γ ∋ B)
+    → ⇑ʳ (λ y → S_ {B = C} (ρ y)) x ≡ S_ {B = renameᵗ S_ C} (⇑ʳ ρ x)
+  ⇑ʳ-S {Γ = ∅} ρ ()
+  ⇑ʳ-S {Γ = Γ , A} ρ Z = refl
+  ⇑ʳ-S {Γ = Γ , A} {Γ' = Γ'} {C = C} ρ (S x)
+    rewrite ⇑ʳ-S {Γ = Γ} {Γ' = Γ'} {C = C} (λ y → ρ (S_ {B = A} y)) x = refl
+
+⇑ʳ-id-id : ∀ {Δ Γ A} (x : ⇑ᶜ Γ ∋ A) → ⇑ʳ idʳ x ≡ idʳ {Δ = Δ ,α} {Γ = ⇑ᶜ Γ} x
+⇑ʳ-id-id {Γ = ∅} ()
+⇑ʳ-id-id {Γ = Γ , B} Z = refl
+⇑ʳ-id-id {Δ} {Γ = Γ , B} (S x) rewrite ⇑ʳ-S {C = B} (idʳ {Δ} {Γ}) x
+        | ⇑ʳ-id-id {Δ} {Γ} x = refl
+{-# REWRITE ⇑ʳ-id-id #-}
+
+private
+  ⇑ˢ-ren : ∀ {Δ} {Γ Γ' : Ctx Δ} (ρ : Γ →ʳ Γ') {A}
+    → (x : ⇑ᶜ Γ ∋ A)
+    → ⇑ˢ (ren ρ) x ≡ ren (⇑ʳ ρ) x
+  ⇑ˢ-ren {Γ = ∅} ρ ()
+  ⇑ˢ-ren {Γ = Γ , B} ρ Z = refl
+  ⇑ˢ-ren {Γ = Γ , B} ρ (S x) rewrite ⇑ˢ-ren (λ y → ρ (S y)) x = refl
+
+⇑ˢ-id-id : ∀ {Δ Γ A} (x : ⇑ᶜ Γ ∋ A) → ⇑ˢ (id {Δ} {Γ}) x ≡ id {Δ = Δ ,α} {Γ = ⇑ᶜ Γ} x
+⇑ˢ-id-id x rewrite ⇑ˢ-ren idʳ x | ⇑ʳ-id-id x = refl
+{-# REWRITE ⇑ˢ-id-id #-}
 
 subst : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ}
   → Γ →ˢ Γ'
@@ -517,16 +560,48 @@ subst-cong σ≡τ (Λ M)         = cong Λ_ (subst-cong (⇑ˢ-cong σ≡τ) M)
   ⇑ˢ-cong {Γ = Γ , B} σ≡τ (S x)  = ⇑ˢ-cong (λ y → σ≡τ (S y)) x
 subst-cong σ≡τ (M ∙ B)       = cong (λ N → N ∙ B) (subst-cong σ≡τ M)
 
--- id-id : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A) → subst id M ≡ M
--- id-id `zero = refl
--- id-id (` x) = refl
--- id-id (ƛ A ˙ M) = cong (ƛ A ˙_) (trans (subst-cong exts-id-id M) (id-id M))
--- id-id (M · M₁) rewrite id-id M | id-id M₁ = refl
--- id-id `⟨ M , M₁ ⟩ rewrite id-id M | id-id M₁ = refl
--- id-id (`proj₁ M) rewrite id-id M = refl
--- id-id (`proj₂ M) rewrite id-id M = refl
--- id-id (Λ M) = {!!}
--- id-id (M ∙ B) rewrite id-id M = refl
+sub-id : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A)
+    ---------------------------------
+  → subst id M ≡ M
+sub-id `zero = refl
+sub-id (` x) = refl
+sub-id (ƛ A ˙ M) = cong (ƛ A ˙_) (sub-id M)
+sub-id (M · M₁) rewrite sub-id M | sub-id M₁ = refl
+sub-id `⟨ M , M₁ ⟩ rewrite sub-id M | sub-id M₁ = refl
+sub-id (`proj₁ M) rewrite sub-id M = refl
+sub-id (`proj₂ M) rewrite sub-id M = refl
+sub-id (Λ M) = cong Λ_ (sub-id M)
+sub-id (M ∙ B) rewrite sub-id M = refl
+{-# REWRITE sub-id #-}
+
+extsᵗ-idᵗ-id : ∀ {Δ} → extsᵗ (idᵗ {Δ}) ≡ idᵗ {Δ ,α}
+extsᵗ-idᵗ-id = extensionality λ where
+  Z      → refl
+  (S α)  → refl
+{-# REWRITE extsᵗ-idᵗ-id #-}
+
+substCtx-idᵗ-id : ∀ {Δ} (Γ : Ctx Δ) → substCtx idᵗ Γ ≡ Γ
+substCtx-idᵗ-id ∅ = refl
+substCtx-idᵗ-id (Γ , A) rewrite substCtx-idᵗ-id Γ = refl
+{-# REWRITE substCtx-idᵗ-id #-}
+
+sub-idᵀ : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A)
+    ---------------------------------
+  → substᵀ idᵗ M ≡ M
+sub-idᵀ `zero = refl
+sub-idᵀ (` x) = cong `_ (substᵗ-∋-idᵗ x)
+  where
+  substᵗ-∋-idᵗ : ∀ {Δ Γ A} (x : Γ ∋ A) → substᵗ-∋ (idᵗ {Δ}) x ≡ x
+  substᵗ-∋-idᵗ Z      = refl
+  substᵗ-∋-idᵗ (S x)  = cong S_ (substᵗ-∋-idᵗ x)
+sub-idᵀ (ƛ A ˙ M) = cong (ƛ A ˙_) (sub-idᵀ M)
+sub-idᵀ (M · M₁) rewrite sub-idᵀ M | sub-idᵀ M₁ = refl
+sub-idᵀ `⟨ M , M₁ ⟩ rewrite sub-idᵀ M | sub-idᵀ M₁ = refl
+sub-idᵀ (`proj₁ M) rewrite sub-idᵀ M = refl
+sub-idᵀ (`proj₂ M) rewrite sub-idᵀ M = refl
+sub-idᵀ (Λ M) = cong Λ_ (sub-idᵀ M)
+sub-idᵀ (M ∙ B) rewrite sub-idᵀ M = refl
+{-# REWRITE sub-idᵀ #-}
 
 infixr 5 _⨟_
 

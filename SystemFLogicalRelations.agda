@@ -116,14 +116,9 @@ LogicalRel {Δ} {Γ} {A} M N = ∀ (ρ : RelSub Δ) (γ : RelEnv Γ ρ)
 postulate
   fundamental : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A) → LogicalRel M M
 
-postulate
-  close-empty-id : ∀ {A} (M : ∅ ; ∅ ⊢ A) → subst id (substᵀ idᵗ M) ≡ M
-
-fundamental-id : ∀ (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z)) → ExprRel (`∀ (` Z ⇒ ` Z)) emptyRelSub M M
-fundamental-id M = substEq
-    (λ □ → ExprRel (`∀ (` Z ⇒ ` Z)) emptyRelSub □ □)
-    (close-empty-id M)
-    (fundamental M emptyRelSub emptyRelEnv)
+-- check
+close-empty-id : ∀ {A} (M : ∅ ; ∅ ⊢ A) → subst id (substᵀ idᵗ M) ≡ M
+close-empty-id M = refl
 
 singletonRel : ∀ {A B}
   → (V : ∅ ; ∅ ⊢ A)
@@ -144,12 +139,12 @@ free-theorem-id : ∀ {A : Type ∅}
     ------------------------
   → (M ∙ A) · V —↠ V
 free-theorem-id {A} M V v =
-  case fundamental-id M of λ where
+  case fundamental M emptyRelSub emptyRelEnv of λ where
   ⟨ Λ N₁ , ⟨ Λ N₂ , ⟨ V-Λ , ⟨ V-Λ , ⟨ M↠ΛN₁ , ⟨ M↠ΛN₂ , rel ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
     case rel A A (singletonRel V V) of λ where
     ⟨ ƛ _ ˙ N₁′ , ⟨ ƛ _ ˙ N₂′ , ⟨ V-ƛ , ⟨ V-ƛ , ⟨ N₁[A]↠ƛN₁′ , ⟨ N₂[A]↠ƛN₂′ , rel′ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
       case rel′ v v (singletonRel-refl v) of λ where
-      ⟨ W₁ , ⟨ W₂ , ⟨ w₁ , ⟨ w₂ , ⟨ N₁′[V]↠W₁ , ⟨ N₂′[V]↠W₂ , lift ⟨ refl , _ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ → 
+      ⟨ W₁ , ⟨ W₂ , ⟨ w₁ , ⟨ w₂ , ⟨ N₁′[V]↠W₁ , ⟨ N₂′[V]↠W₂ , lift ⟨ refl , _ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
         —↠-trans (·₁-↠ (∙-↠ M↠ΛN₁))
             (—↠-trans
               (((Λ N₁ ∙ A) · V) —→⟨ ξ-·₁ β-Λ ⟩ (((N₁ [ A ]ᵀ) · V) ∎))
