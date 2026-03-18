@@ -126,14 +126,10 @@ postulate
   close-empty-id : ∀ {A} (M : ∅ ; ∅ ⊢ A)
     → substEq (_ ; ∅ ⊢_) (sub-idᵗ A) (subst emptySub (substᵀ emptyTySub M)) ≡ M
 
-close-empty-id-∀id : ∀ (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z)) → subst emptySub (substᵀ emptyTySub M) ≡ M
-close-empty-id-∀id M with sub-idᵗ {∅} (`∀ (` Z ⇒ ` Z))
-... | refl = close-empty-id M
-
 fundamental-id : ∀ (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z)) → ExprRel (`∀ (` Z ⇒ ` Z)) emptyRelSub M M
 fundamental-id M = substEq
     (λ □ → ExprRel (`∀ (` Z ⇒ ` Z)) emptyRelSub □ □)
-    (close-empty-id-∀id M)
+    (close-empty-id M)
     (fundamental M emptyRelSub emptyRelEnv)
 
 singletonRel : ∀ {A B}
@@ -178,14 +174,10 @@ swap-inst : ∀ {A B}
   → ∅ ; ∅ ⊢ ((A `× B) ⇒ (B `× A))
 swap-inst {A} {B} M = (M ∙ A) ∙ B
 
-close-empty-id-swap : ∀ (M : ∅ ; ∅ ⊢ SwapTy) → subst emptySub (substᵀ emptyTySub M) ≡ M
-close-empty-id-swap M with sub-idᵗ {∅} SwapTy
-... | refl = close-empty-id M
-
 fundamental-swap : ∀ (M : ∅ ; ∅ ⊢ SwapTy) → ExprRel SwapTy emptyRelSub M M
 fundamental-swap M = substEq
     (λ □ → ExprRel SwapTy emptyRelSub □ □)
-    (close-empty-id-swap M)
+    (close-empty-id M)
     (fundamental M emptyRelSub emptyRelEnv)
 
 swap-input-related : ∀ {A B}
