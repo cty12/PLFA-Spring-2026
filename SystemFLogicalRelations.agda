@@ -35,14 +35,14 @@ extendRelSub : ∀ {Δ}
   → (A₁ A₂ : Type ∅)
   → Rel A₁ A₂
   → RelSub (Δ ,α)
-(extendRelSub ρ A₁ A₂ R) .ρ₁        = ρ₁ ρ ,ᵗ A₁
-(extendRelSub ρ A₁ A₂ R) .ρ₂        = ρ₂ ρ ,ᵗ A₂
+(extendRelSub ρ A₁ A₂ R) .ρ₁        = A₁ •ᵗ ρ₁ ρ
+(extendRelSub ρ A₁ A₂ R) .ρ₂        = A₂ •ᵗ ρ₂ ρ
 (extendRelSub ρ A₁ A₂ R) .ρR Z      = R
 (extendRelSub ρ A₁ A₂ R) .ρR (S α)  = ρR ρ α
 
 emptyRelSub : RelSub ∅
 emptyTySub : ∅ ⇒ˢ ∅
-emptyTySub = `_
+emptyTySub = idᵗ
 
 (emptyRelSub .ρ₁) = emptyTySub
 (emptyRelSub .ρ₂) = emptyTySub
@@ -101,12 +101,9 @@ record RelEnv {Δ} (Γ : Ctx Δ) (ρ : RelSub Δ) : Set₁ where
 
 open RelEnv public
 
-idSub : ∀ {Δ} {Γ : Ctx Δ} → Γ →ˢ Γ
-idSub x = ` x
-
 emptyRelEnv : ∀ {ρ : RelSub ∅} → RelEnv ∅ ρ
 emptySub : ∅ →ˢ ∅
-emptySub = idSub
+emptySub = id
 
 (emptyRelEnv .γ₁) = emptySub
 (emptyRelEnv .γ₂) = emptySub
@@ -127,10 +124,10 @@ postulate
 
 postulate
   close-empty-id : ∀ {A} (M : ∅ ; ∅ ⊢ A)
-    → substEq (_ ; ∅ ⊢_) (substᵗ-id A) (subst emptySub (substᵀ emptyTySub M)) ≡ M
+    → substEq (_ ; ∅ ⊢_) (sub-idᵗ A) (subst emptySub (substᵀ emptyTySub M)) ≡ M
 
 close-empty-id-∀id : ∀ (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z)) → subst emptySub (substᵀ emptyTySub M) ≡ M
-close-empty-id-∀id M with substᵗ-id {∅} (`∀ (` Z ⇒ ` Z))
+close-empty-id-∀id M with sub-idᵗ {∅} (`∀ (` Z ⇒ ` Z))
 ... | refl = close-empty-id M
 
 fundamental-id : ∀ (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z)) → ExprRel (`∀ (` Z ⇒ ` Z)) emptyRelSub M M
@@ -151,13 +148,13 @@ singletonRel-refl : ∀ {A} {V : ∅ ; ∅ ⊢ A}
 singletonRel-refl v = lift ⟨ refl , refl ⟩
 
 -- Free Theorem (I), page 27.
-free-theorem-I : ∀ {A : Type ∅}
+free-theorem-id : ∀ {A : Type ∅}
   → (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z))
   → (V : ∅ ; ∅ ⊢ A)
   → Value V
     ------------------------
   → (M ∙ A) · V —↠ V
-free-theorem-I {A} M V v =
+free-theorem-id {A} M V v =
   case fundamental-id M of λ where
   ⟨ Λ N₁ , ⟨ Λ N₂ , ⟨ V-Λ , ⟨ V-Λ , ⟨ M↠ΛN₁ , ⟨ M↠ΛN₂ , rel ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
     case rel A A (singletonRel V V) of λ where
@@ -176,37 +173,13 @@ free-theorem-I {A} M V v =
 SwapTy : Type ∅
 SwapTy = `∀ (`∀ ((` (S Z) `× ` Z) ⇒ (` Z `× ` (S Z))))
 
-shift-subst-cancel : ∀ (A B : Type ∅)
-  → substᵗ (σ₀ᵗ B) (renameᵗ S_ A) ≡ A
-shift-subst-cancel A B = []ᵗ-cancel-shift A B
-{-# REWRITE shift-subst-cancel #-}
-
-swap-arg-type : ∀ (A B : Type ∅)
-  → substᵗ (σ₀ᵗ B) (substᵗ (extsᵗ (σ₀ᵗ A)) ((` (S Z)) `× (` Z)))
-    ≡ (A `× B)
-swap-arg-type A B rewrite shift-subst-cancel A B = refl
-
-swap-res-type : ∀ (A B : Type ∅)
-  → substᵗ (σ₀ᵗ B) (substᵗ (extsᵗ (σ₀ᵗ A)) ((` Z) `× (` (S Z))))
-    ≡ (B `× A)
-swap-res-type A B rewrite shift-subst-cancel A B = refl
-
-swap-fun-type : ∀ (A B : Type ∅)
-  → substᵗ
-      (σ₀ᵗ B)
-      (substᵗ
-        (extsᵗ (σ₀ᵗ A))
-        (((` (S Z)) `× (` Z)) ⇒ ((` Z) `× (` (S Z)))))
-    ≡ ((A `× B) ⇒ (B `× A))
-swap-fun-type A B = cong₂ _⇒_ (swap-arg-type A B) (swap-res-type A B)
-
 swap-inst : ∀ {A B}
   → (M : ∅ ; ∅ ⊢ SwapTy)
   → ∅ ; ∅ ⊢ ((A `× B) ⇒ (B `× A))
 swap-inst {A} {B} M = (M ∙ A) ∙ B
 
 close-empty-id-swap : ∀ (M : ∅ ; ∅ ⊢ SwapTy) → subst emptySub (substᵀ emptyTySub M) ≡ M
-close-empty-id-swap M with substᵗ-id {∅} SwapTy
+close-empty-id-swap M with sub-idᵗ {∅} SwapTy
 ... | refl = close-empty-id M
 
 fundamental-swap : ∀ (M : ∅ ; ∅ ⊢ SwapTy) → ExprRel SwapTy emptyRelSub M M
@@ -222,13 +195,8 @@ swap-input-related : ∀ {A B}
   → (w : Value W)
   → ValueRel
       ((` (S Z)) `× (` Z))
-      (extendRelSub
-        (extendRelSub emptyRelSub A B (singletonRel V W))
-        B A (singletonRel W V))
-      (`⟨ V , W ⟩)
-      (`⟨ W , V ⟩)
-      (V-⟨⟩ v w)
-      (V-⟨⟩ w v)
+      (extendRelSub (extendRelSub emptyRelSub A B (singletonRel V W)) B A (singletonRel W V))
+      (`⟨ V , W ⟩) (`⟨ W , V ⟩) (V-⟨⟩ v w) (V-⟨⟩ w v)
 swap-input-related v w = ⟨ lift ⟨ refl , refl ⟩ , lift ⟨ refl , refl ⟩ ⟩
 
 -- For the swapped result, the polymorphic term must have type
@@ -239,7 +207,7 @@ free-theorem-swap : ∀ {A B : Type ∅}
   → (W : ∅ ; ∅ ⊢ B)
   → Value V
   → Value W
-    ------------------------
+    ---------------------------------------------
   → (swap-inst M · `⟨ V , W ⟩) —↠ `⟨ W , V ⟩
 free-theorem-swap {A} {B} M V W v w =
   case fundamental-swap M of λ where

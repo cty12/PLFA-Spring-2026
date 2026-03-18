@@ -13,6 +13,7 @@ open import Function using (case_of_)
 
 infixr 8 _`×_
 infixr 7 _⇒_
+infixr 6 _•ᵗ_
 infixl 5 _,_
 infix  4 _∋_
 infix  4 _;_⊢_
@@ -97,32 +98,35 @@ renameᵗ-comp ρ₁ ρ₂ (`∀ A) = cong `∀_
   ext-comp : ∀ α → extᵗ ρ₂ (extᵗ ρ₁ α) ≡ extᵗ (λ β → ρ₂ (ρ₁ β)) α
   ext-comp Z      = refl
   ext-comp (S α)  = refl
+{-# REWRITE renameᵗ-comp #-}
 
 ⇑ᵗ : ∀ {Δ} (A : Type Δ) → Type (Δ ,α)
 ⇑ᵗ = renameᵗ S_
 
-renameᵗ-shift : ∀ {Δ Δ'} (ρ : Δ ⇒ʳ Δ') (A : Type Δ)
-  → renameᵗ (extᵗ ρ) (⇑ᵗ A) ≡ ⇑ᵗ (renameᵗ ρ A)
-renameᵗ-shift ρ A rewrite renameᵗ-comp S_ (extᵗ ρ) A | renameᵗ-comp ρ S_ A = refl
+-- check
+renameᵗ-shift : ∀ {Δ Ξ} (ρ : Δ ⇒ʳ Ξ) A → renameᵗ (extᵗ ρ) (⇑ᵗ A) ≡ ⇑ᵗ (renameᵗ ρ A)
+renameᵗ-shift ρ A = refl
 
 infixr 7 _⇒ˢ_
 
 _⇒ˢ_ : TyCtx → TyCtx → Set
 Δ ⇒ˢ Δ' = TyVar Δ → Type Δ'
 
+idᵗ : ∀ {Δ} → Δ ⇒ˢ Δ
+idᵗ = `_
+
+↑ᵗ : ∀ {Δ} → Δ ⇒ˢ (Δ ,α)
+↑ᵗ α = ` (S α)
+
 extsᵗ : ∀ {Δ Δ'} → Δ ⇒ˢ Δ' → (Δ ,α) ⇒ˢ (Δ' ,α)
 extsᵗ σ Z      = ` Z
 extsᵗ σ (S x)  = ⇑ᵗ (σ x)
 
-infixl 6 _,ᵗ_
+_•ᵗ_ : ∀ {Δ Δ'} → Type Δ' → Δ ⇒ˢ Δ' → (Δ ,α) ⇒ˢ Δ'
+(A •ᵗ σ) Z      = A
+(A •ᵗ σ) (S α)  = σ α
 
-_,ᵗ_ : ∀ {Δ Δ'} → Δ ⇒ˢ Δ' → Type Δ' → (Δ ,α) ⇒ˢ Δ'
-(σ ,ᵗ A) Z      = A
-(σ ,ᵗ A) (S α)  = σ α
-
-σ₀ᵗ : ∀ {Δ} → Type Δ → (Δ ,α) ⇒ˢ Δ
-σ₀ᵗ B Z      = B
-σ₀ᵗ B (S x)  = ` x
+infixr 5 _⨟ᵗ_
 
 substᵗ : ∀ {Δ Δ'} → Δ ⇒ˢ Δ' → Type Δ → Type Δ'
 substᵗ σ (` x)   = σ x
@@ -130,6 +134,15 @@ substᵗ σ `Nat     = `Nat
 substᵗ σ (A ⇒ B)  = substᵗ σ A ⇒ substᵗ σ B
 substᵗ σ (A `× B)  = substᵗ σ A `× substᵗ σ B
 substᵗ σ (`∀ A)  = `∀ (substᵗ (extsᵗ σ) A)
+
+_⨟ᵗ_ : ∀ {Δ₁ Δ₂ Δ₃} → Δ₁ ⇒ˢ Δ₂ → Δ₂ ⇒ˢ Δ₃ → Δ₁ ⇒ˢ Δ₃
+(σ ⨟ᵗ τ) α = substᵗ τ (σ α)
+
+σ₀ᵗ : ∀ {Δ} → Type Δ → (Δ ,α) ⇒ˢ Δ
+σ₀ᵗ B = B •ᵗ idᵗ
+
+_[_]ᵗ : ∀ {Δ} → Type (Δ ,α) → Type Δ → Type Δ
+A [ B ]ᵗ = substᵗ (σ₀ᵗ B) A
 
 substᵗ-cong : ∀ {Δ Δ'} {σ τ : Δ ⇒ˢ Δ'} A
   → (∀ α → σ α ≡ τ α)
@@ -145,113 +158,102 @@ substᵗ-cong {σ = σ} {τ} (`∀ A) eq = cong `∀_ (substᵗ-cong A exts-eq)
   exts-eq Z      = refl
   exts-eq (S α)  = cong ⇑ᵗ (eq α)
 
-_[_]ᵗ : ∀ {Δ} → Type (Δ ,α) → Type Δ → Type Δ
-A [ B ]ᵗ = substᵗ (σ₀ᵗ B) A
-
 extsᵗ-extᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₁ ⇒ʳ Δ₂) (σ : Δ₂ ⇒ˢ Δ₃) α
-    ------------------------------------------------------------
-  → extsᵗ σ (extᵗ ρ α) ≡ extsᵗ (λ β → σ (ρ β)) α
+      ------------------------------------------------------------
+    → extsᵗ σ (extᵗ ρ α) ≡ extsᵗ (λ β → σ (ρ β)) α
 extsᵗ-extᵗ ρ σ Z      = refl
 extsᵗ-extᵗ ρ σ (S _)  = refl
+{-# REWRITE extsᵗ-extᵗ #-}
 
-extᵗ-extsᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₂ ⇒ʳ Δ₃) (σ : Δ₁ ⇒ˢ Δ₂) α
-    ------------------------------------------------------------------
-  → renameᵗ (extᵗ ρ) (extsᵗ σ α) ≡ extsᵗ (λ β → renameᵗ ρ (σ β)) α
-extᵗ-extsᵗ ρ σ Z      = refl
-extᵗ-extsᵗ ρ σ (S α) rewrite renameᵗ-shift ρ (σ α) = refl
+ren-subᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₁ ⇒ʳ Δ₂) (σ : Δ₂ ⇒ˢ Δ₃) A
+      ---------------------------------------------------------------
+    → substᵗ σ (renameᵗ ρ A) ≡ substᵗ (λ α → σ (ρ α)) A
+ren-subᵗ ρ σ (` α)  = refl
+ren-subᵗ ρ σ `Nat   = refl
+ren-subᵗ ρ σ (A ⇒ B) rewrite ren-subᵗ ρ σ A | ren-subᵗ ρ σ B = refl
+ren-subᵗ ρ σ (A `× B) rewrite ren-subᵗ ρ σ A | ren-subᵗ ρ σ B = refl
+ren-subᵗ ρ σ (`∀ A)   rewrite ren-subᵗ (extᵗ ρ) (extsᵗ σ) A = refl
+{-# REWRITE ren-subᵗ #-}
 
-substᵗ-renameᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₁ ⇒ʳ Δ₂) (σ : Δ₂ ⇒ˢ Δ₃) A
-    ---------------------------------------------------------------
-  → substᵗ σ (renameᵗ ρ A) ≡ substᵗ (λ α → σ (ρ α)) A
-substᵗ-renameᵗ ρ σ (` α)  = refl
-substᵗ-renameᵗ ρ σ `Nat   = refl
-substᵗ-renameᵗ ρ σ (A ⇒ B) rewrite substᵗ-renameᵗ ρ σ A | substᵗ-renameᵗ ρ σ B = refl
-substᵗ-renameᵗ ρ σ (A `× B) rewrite substᵗ-renameᵗ ρ σ A | substᵗ-renameᵗ ρ σ B = refl
-substᵗ-renameᵗ ρ σ (`∀ A) rewrite substᵗ-renameᵗ (extᵗ ρ) (extsᵗ σ) A
-  | substᵗ-cong A (extsᵗ-extᵗ ρ σ) = refl
-
-renameᵗ-substᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₂ ⇒ʳ Δ₃) (σ : Δ₁ ⇒ˢ Δ₂) A
-    ---------------------------------------------------------------
-  → renameᵗ ρ (substᵗ σ A) ≡ substᵗ (λ α → renameᵗ ρ (σ α)) A
-renameᵗ-substᵗ ρ σ (` α)  = refl
-renameᵗ-substᵗ ρ σ `Nat   = refl
-renameᵗ-substᵗ ρ σ (A ⇒ B) rewrite renameᵗ-substᵗ ρ σ A | renameᵗ-substᵗ ρ σ B = refl
-renameᵗ-substᵗ ρ σ (A `× B) rewrite renameᵗ-substᵗ ρ σ A | renameᵗ-substᵗ ρ σ B = refl
-renameᵗ-substᵗ ρ σ (`∀ A) rewrite renameᵗ-substᵗ (extᵗ ρ) (extsᵗ σ) A
-  | substᵗ-cong A (extᵗ-extsᵗ ρ σ) = refl
-
-substᵗ-shift : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') A
-    ---------------------------------------------------
-  → substᵗ (extsᵗ σ) (⇑ᵗ A) ≡ ⇑ᵗ (substᵗ σ A)
-substᵗ-shift σ A rewrite substᵗ-renameᵗ S_ (extsᵗ σ) A
-  | sym (renameᵗ-substᵗ S_ σ A) = refl
-
-extsᵗ-substᵗ : ∀ {Δ₁ Δ₂ Δ₃} (σ : Δ₁ ⇒ˢ Δ₂) (τ : Δ₂ ⇒ˢ Δ₃) α
-    ------------------------------------------------------------------
-  → substᵗ (extsᵗ τ) (extsᵗ σ α) ≡ extsᵗ (λ β → substᵗ τ (σ β)) α
-extsᵗ-substᵗ σ τ Z      = refl
-extsᵗ-substᵗ σ τ (S x) rewrite substᵗ-shift τ (σ x) = refl
-
-substᵗ-comp : ∀ {Δ₁ Δ₂ Δ₃} (σ : Δ₁ ⇒ˢ Δ₂) (τ : Δ₂ ⇒ˢ Δ₃) A
-    ---------------------------------------------------------------
-  → substᵗ τ (substᵗ σ A) ≡ substᵗ (λ x → substᵗ τ (σ x)) A
-substᵗ-comp σ τ (` α)   = refl
-substᵗ-comp σ τ `Nat    = refl
-substᵗ-comp σ τ (A ⇒ B) rewrite substᵗ-comp σ τ A | substᵗ-comp σ τ B = refl
-substᵗ-comp σ τ (A `× B) rewrite substᵗ-comp σ τ A | substᵗ-comp σ τ B = refl
-substᵗ-comp σ τ (`∀ A) rewrite substᵗ-comp (extsᵗ σ) (extsᵗ τ) A
-  | substᵗ-cong A (extsᵗ-substᵗ σ τ) = refl
+sub-idᵗ : ∀ {Δ} (A : Type Δ) → substᵗ idᵗ A ≡ A
+sub-idᵗ (` x)    = refl
+sub-idᵗ `Nat     = refl
+sub-idᵗ (A ⇒ B)  rewrite sub-idᵗ A | sub-idᵗ B = refl
+sub-idᵗ (A `× B)  rewrite sub-idᵗ A | sub-idᵗ B = refl
+sub-idᵗ (`∀ A) = cong `∀_ eq
+    where
+    exts-id : ∀ α → extsᵗ idᵗ α ≡ ` α
+    exts-id Z      = refl
+    exts-id (S _)  = refl
+    eq : substᵗ (extsᵗ idᵗ) A ≡ A
+    eq rewrite substᵗ-cong A exts-id | sub-idᵗ A = refl
+{-# REWRITE sub-idᵗ #-}
 
 σ₀ᵗ-extᵗ : ∀ {Δ Δ'} (ρ : Δ ⇒ʳ Δ') (B : Type Δ) (x : TyVar (Δ ,α))
-  → renameᵗ ρ (σ₀ᵗ B x) ≡ σ₀ᵗ (renameᵗ ρ B) (extᵗ ρ x)
+    → renameᵗ ρ (σ₀ᵗ B x) ≡ σ₀ᵗ (renameᵗ ρ B) (extᵗ ρ x)
 σ₀ᵗ-extᵗ ρ B Z      = refl
 σ₀ᵗ-extᵗ ρ B (S x)  = refl
+{-# REWRITE σ₀ᵗ-extᵗ #-}
 
+extᵗ-extsᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₂ ⇒ʳ Δ₃) (σ : Δ₁ ⇒ˢ Δ₂) α
+      ------------------------------------------------------------------
+    → renameᵗ (extᵗ ρ) (extsᵗ σ α) ≡ extsᵗ (λ β → renameᵗ ρ (σ β)) α
+extᵗ-extsᵗ ρ σ Z     = refl
+extᵗ-extsᵗ ρ σ (S α) = refl
+{-# REWRITE extᵗ-extsᵗ #-}
+
+sub-renᵗ : ∀ {Δ₁ Δ₂ Δ₃} (ρ : Δ₂ ⇒ʳ Δ₃) (σ : Δ₁ ⇒ˢ Δ₂) A
+      ---------------------------------------------------------------
+    → renameᵗ ρ (substᵗ σ A) ≡ substᵗ (λ α → renameᵗ ρ (σ α)) A
+sub-renᵗ ρ σ (` α)  = refl
+sub-renᵗ ρ σ `Nat   = refl
+sub-renᵗ ρ σ (A ⇒ B) rewrite sub-renᵗ ρ σ A | sub-renᵗ ρ σ B = refl
+sub-renᵗ ρ σ (A `× B) rewrite sub-renᵗ ρ σ A | sub-renᵗ ρ σ B = refl
+sub-renᵗ ρ σ (`∀ A) rewrite sub-renᵗ (extᵗ ρ) (extsᵗ σ) A = refl
+{-# REWRITE sub-renᵗ #-}
+
+-- check
 renameᵗ-[]ᵗ : ∀ {Δ Δ'} (ρ : Δ ⇒ʳ Δ') (A : Type (Δ ,α)) (B : Type Δ)
-  → renameᵗ ρ (A [ B ]ᵗ) ≡ (renameᵗ (extᵗ ρ) A) [ renameᵗ ρ B ]ᵗ
-renameᵗ-[]ᵗ ρ A B
-  rewrite renameᵗ-substᵗ ρ (σ₀ᵗ B) A
-        | substᵗ-cong A (σ₀ᵗ-extᵗ ρ B)
-        | substᵗ-renameᵗ (extᵗ ρ) (σ₀ᵗ (renameᵗ ρ B)) A = refl
+    → renameᵗ ρ (A [ B ]ᵗ) ≡ (renameᵗ (extᵗ ρ) A) [ renameᵗ ρ B ]ᵗ
+renameᵗ-[]ᵗ ρ A B = refl
 
-substᵗ-id : ∀ {Δ} (A : Type Δ) → substᵗ (`_) A ≡ A
-substᵗ-id (` x)    = refl
-substᵗ-id `Nat     = refl
-substᵗ-id (A ⇒ B)  rewrite substᵗ-id A | substᵗ-id B = refl
-substᵗ-id (A `× B)  rewrite substᵗ-id A | substᵗ-id B = refl
-substᵗ-id (`∀ A) = cong `∀_ eq
-  where
-  exts-id : ∀ α → extsᵗ (`_) α ≡ ` α
-  exts-id Z      = refl
-  exts-id (S _)  = refl
-  eq : substᵗ (extsᵗ (`_)) A ≡ A
-  eq rewrite substᵗ-cong A exts-id | substᵗ-id A = refl
+extsᵗ-substᵗ : ∀ {Δ₁ Δ₂ Δ₃} (σ : Δ₁ ⇒ˢ Δ₂) (τ : Δ₂ ⇒ˢ Δ₃) α
+      ------------------------------------------------------------
+    → substᵗ (extsᵗ τ) (extsᵗ σ α) ≡ extsᵗ (σ ⨟ᵗ τ) α
+extsᵗ-substᵗ σ τ Z      = refl
+extsᵗ-substᵗ σ τ (S x) = refl
+{-# REWRITE extsᵗ-substᵗ #-}
 
-[]ᵗ-cancel-shift : ∀ {Δ} (A : Type Δ) (B : Type Δ) → (⇑ᵗ A) [ B ]ᵗ ≡ A
-[]ᵗ-cancel-shift A B rewrite substᵗ-renameᵗ S_ (σ₀ᵗ B) A | substᵗ-id A = refl
+sub-subᵗ : ∀ {Δ₁ Δ₂ Δ₃} (σ : Δ₁ ⇒ˢ Δ₂) (τ : Δ₂ ⇒ˢ Δ₃) A
+      ---------------------------------------------------------------
+    → substᵗ τ (substᵗ σ A) ≡ substᵗ (σ ⨟ᵗ τ) A
+sub-subᵗ σ τ (` α)   = refl
+sub-subᵗ σ τ `Nat    = refl
+sub-subᵗ σ τ (A ⇒ B) rewrite sub-subᵗ σ τ A | sub-subᵗ σ τ B = refl
+sub-subᵗ σ τ (A `× B) rewrite sub-subᵗ σ τ A | sub-subᵗ σ τ B = refl
+sub-subᵗ σ τ (`∀ A) rewrite sub-subᵗ (extsᵗ σ) (extsᵗ τ) A = refl
+{-# REWRITE sub-subᵗ #-}
 
 substᵗ-σ₀ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') (B : Type Δ) (x : TyVar (Δ ,α))
-  → substᵗ σ (σ₀ᵗ B x) ≡ substᵗ (σ₀ᵗ (substᵗ σ B)) (extsᵗ σ x)
+    → substᵗ σ (σ₀ᵗ B x) ≡ substᵗ (σ₀ᵗ (substᵗ σ B)) (extsᵗ σ x)
 substᵗ-σ₀ σ B Z      = refl
-substᵗ-σ₀ σ B (S x)  = sym ([]ᵗ-cancel-shift (σ x) (substᵗ σ B))
+substᵗ-σ₀ σ B (S x)  = refl
+{-# REWRITE substᵗ-σ₀ #-}
 
 substᵗ-[]ᵗ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') (A : Type (Δ ,α)) (B : Type Δ)
-  → substᵗ σ (A [ B ]ᵗ) ≡ (substᵗ (extsᵗ σ) A) [ substᵗ σ B ]ᵗ
-substᵗ-[]ᵗ σ A B
-  rewrite substᵗ-comp (σ₀ᵗ B) σ A
-        | substᵗ-cong A (substᵗ-σ₀ σ B)
-        | sym (substᵗ-comp (extsᵗ σ) (σ₀ᵗ (substᵗ σ B)) A) = refl
+    → substᵗ σ (A [ B ]ᵗ) ≡ (substᵗ (extsᵗ σ) A) [ substᵗ σ B ]ᵗ
+substᵗ-[]ᵗ σ A B rewrite sym (sub-subᵗ (extsᵗ σ) (σ₀ᵗ (substᵗ σ B)) A) = refl
 
-∀-[] : ∀ {Δ Δ'} (A : Type (Δ ,α)) (σ : Δ ⇒ˢ Δ') (B : Type Δ')
-  -- (substᵗ (extsᵗ σ) A) [ B ]ᵗ ≡ substᵗ (σ ,ᵗ B) A
-  → substᵗ (σ₀ᵗ B) (substᵗ (extsᵗ σ) A) ≡ substᵗ (σ ,ᵗ B) A
-∀-[] A σ B = trans (substᵗ-comp (extsᵗ σ) (σ₀ᵗ B) A) (substᵗ-cong A eq)
-  where
-  eq : ∀ (β : TyVar (_ ,α))
-    → substᵗ (σ₀ᵗ B) (extsᵗ σ β) ≡ (σ ,ᵗ B) β
-  eq Z      = refl
-  eq (S β)  = []ᵗ-cancel-shift (σ β) B
-{-# REWRITE ∀-[] #-}
+-- | Needed for type preservation for System F
+exts-sub-consᵗ : ∀ {Δ Δ'} (A : Type (Δ ,α)) (σ : Δ ⇒ˢ Δ') (B : Type Δ')
+    -- (substᵗ (extsᵗ σ) A) [ B ]ᵗ ≡ substᵗ (B •ᵗ σ) A
+    → substᵗ (extsᵗ σ ⨟ᵗ B •ᵗ idᵗ) A ≡ substᵗ (B •ᵗ σ) A
+exts-sub-consᵗ A σ B = trans (sub-subᵗ (extsᵗ σ) (σ₀ᵗ B) A) (substᵗ-cong A eq)
+    where
+    eq : ∀ β → substᵗ (σ₀ᵗ B) (extsᵗ σ β) ≡ (B •ᵗ σ) β
+    eq Z      = refl
+    eq (S β)  = refl
+{-# REWRITE exts-sub-consᵗ #-}
 
 ------------------------------------------
 -- | Term contexts and term variables | --
@@ -264,7 +266,6 @@ data Ctx (Δ : TyCtx) : Set where
 data _∋_ {Δ : TyCtx} : Ctx Δ → Type Δ → Set where
   Z  : ∀ {Γ A} → Γ , A ∋ A
   S_ : ∀ {Γ A B} → Γ ∋ A → Γ , B ∋ A
-
 
 
 renameCtx : ∀ {Δ Δ'} → Δ ⇒ʳ Δ' → Ctx Δ → Ctx Δ'
@@ -289,16 +290,6 @@ substᵗ-∋ σ (S x)  = S (substᵗ-∋ σ x)
 
 ⇑ᶜ : ∀ {Δ} → Ctx Δ → Ctx (Δ ,α)
 ⇑ᶜ = renameCtx S_
-
-substCtx-extsᵗ-⇑ᶜ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') (Γ : Ctx Δ)
-  → substCtx (extsᵗ σ) (⇑ᶜ Γ) ≡ ⇑ᶜ (substCtx σ Γ)
-substCtx-extsᵗ-⇑ᶜ σ ∅ = refl
-substCtx-extsᵗ-⇑ᶜ σ (Γ , A) rewrite substCtx-extsᵗ-⇑ᶜ σ Γ | substᵗ-shift σ A = refl
-
-⇑ᵗ-∋ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ}
-  → Γ ∋ A
-  → ⇑ᶜ Γ ∋ ⇑ᵗ A
-⇑ᵗ-∋ = renameᵗ-∋ S_
 
 -----------------------------------
 -- | Intrinsically typed terms | --
@@ -362,53 +353,51 @@ data _;_⊢_ (Δ : TyCtx) (Γ : Ctx Δ) : Type Δ → Set where
 renameCtx-extᵗ-⇑ᶜ : ∀ {Δ Δ'} (ρ : Δ ⇒ʳ Δ') (Γ : Ctx Δ)
   → renameCtx (extᵗ ρ) (⇑ᶜ Γ) ≡ ⇑ᶜ (renameCtx ρ Γ)
 renameCtx-extᵗ-⇑ᶜ ρ ∅ = refl
-renameCtx-extᵗ-⇑ᶜ ρ (Γ , A)
-  rewrite renameCtx-extᵗ-⇑ᶜ ρ Γ | renameᵗ-shift ρ A = refl
+renameCtx-extᵗ-⇑ᶜ ρ (Γ , A) rewrite renameCtx-extᵗ-⇑ᶜ ρ Γ = refl
 
 renameᵀ : ∀ {Δ Δ'} (ρ : Δ ⇒ʳ Δ') {Γ : Ctx Δ} {A : Type Δ}
   → Δ ; Γ ⊢ A
   → Δ' ; renameCtx ρ Γ ⊢ renameᵗ ρ A
-renameᵀ ρ `zero    = `zero
-renameᵀ ρ (` x)    = ` (renameᵗ-∋ ρ x)
-renameᵀ ρ (ƛ A ˙ N)    = ƛ renameᵗ ρ A ˙ (renameᵀ ρ N)
-renameᵀ ρ (L · M)  = renameᵀ ρ L · renameᵀ ρ M
+renameᵀ ρ `zero         = `zero
+renameᵀ ρ (` x)         = ` (renameᵗ-∋ ρ x)
+renameᵀ ρ (ƛ A ˙ N)     = ƛ renameᵗ ρ A ˙ (renameᵀ ρ N)
+renameᵀ ρ (L · M)       = renameᵀ ρ L · renameᵀ ρ M
 renameᵀ ρ (`⟨ L , M ⟩)  = `⟨ renameᵀ ρ L , renameᵀ ρ M ⟩
-renameᵀ ρ (`proj₁ M)  = `proj₁ (renameᵀ ρ M)
-renameᵀ ρ (`proj₂ M)  = `proj₂ (renameᵀ ρ M)
-renameᵀ ρ {Γ = Γ} (Λ N) = Λ (substEq (_ ;_⊢ _) (renameCtx-extᵗ-⇑ᶜ ρ Γ) (renameᵀ (extᵗ ρ) N))
-renameᵀ ρ {Γ = Γ} (_∙_ {A = A} M B) rewrite renameᵗ-[]ᵗ ρ A B = renameᵀ ρ M ∙ renameᵗ ρ B
+renameᵀ ρ (`proj₁ M)    = `proj₁ (renameᵀ ρ M)
+renameᵀ ρ (`proj₂ M)    = `proj₂ (renameᵀ ρ M)
+renameᵀ ρ (Λ N)         = Λ (substEq (_ ;_⊢ _) (renameCtx-extᵗ-⇑ᶜ ρ _) (renameᵀ (extᵗ ρ) N))
+renameᵀ ρ (M ∙ A)       = renameᵀ ρ M ∙ renameᵗ ρ A
 
-⇑ᵀ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ}
-  → Δ ; Γ ⊢ A
-  → Δ ,α ; ⇑ᶜ Γ ⊢ renameᵗ S_ A
-⇑ᵀ = renameᵀ S_
+substCtx-extsᵗ-⇑ᶜ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') (Γ : Ctx Δ)
+  → substCtx (extsᵗ σ) (⇑ᶜ Γ) ≡ ⇑ᶜ (substCtx σ Γ)
+substCtx-extsᵗ-⇑ᶜ σ ∅ = refl
+substCtx-extsᵗ-⇑ᶜ σ (Γ , A) rewrite substCtx-extsᵗ-⇑ᶜ σ Γ = refl
 
 substᵀ : ∀ {Δ Δ'} (σ : Δ ⇒ˢ Δ') {Γ : Ctx Δ} {A : Type Δ}
   → Δ ; Γ ⊢ A
   → Δ' ; substCtx σ Γ ⊢ substᵗ σ A
-substᵀ σ `zero    = `zero
-substᵀ σ (` x)    = ` (substᵗ-∋ σ x)
-substᵀ σ (ƛ A ˙ N)    = ƛ substᵗ σ A ˙ (substᵀ σ N)
-substᵀ σ (L · M)  = substᵀ σ L · substᵀ σ M
-substᵀ σ (`⟨ L , M ⟩)  = `⟨ substᵀ σ L , substᵀ σ M ⟩
-substᵀ σ (`proj₁ M)  = `proj₁ (substᵀ σ M)
-substᵀ σ (`proj₂ M)  = `proj₂ (substᵀ σ M)
-substᵀ σ {Γ = Γ} (Λ N) = Λ (substEq (_ ;_⊢ _) (substCtx-extsᵗ-⇑ᶜ σ Γ) (substᵀ (extsᵗ σ) N))
-substᵀ σ (_∙_ {A = A} M B) rewrite substᵗ-[]ᵗ σ A B = substᵀ σ M ∙ substᵗ σ B
+substᵀ σ `zero             = `zero
+substᵀ σ (` x)             = ` (substᵗ-∋ σ x)
+substᵀ σ (ƛ A ˙ N)         = ƛ substᵗ σ A ˙ (substᵀ σ N)
+substᵀ σ (L · M)           = substᵀ σ L · substᵀ σ M
+substᵀ σ (`⟨ L , M ⟩)      = `⟨ substᵀ σ L , substᵀ σ M ⟩
+substᵀ σ (`proj₁ M)        = `proj₁ (substᵀ σ M)
+substᵀ σ (`proj₂ M)        = `proj₂ (substᵀ σ M)
+substᵀ σ (Λ N)             = Λ (substEq (_ ;_⊢ _) (substCtx-extsᵗ-⇑ᶜ σ _) (substᵀ (extsᵗ σ) N))
+substᵀ σ (M ∙ A)           = substᵀ σ M ∙ substᵗ σ A
 
 substCtx-σ₀-⇑ᶜ-cancel : ∀ {Δ} (Γ : Ctx Δ) (B : Type Δ)
   → substCtx (σ₀ᵗ B) (⇑ᶜ Γ) ≡ Γ
 substCtx-σ₀-⇑ᶜ-cancel ∅ B = refl
-substCtx-σ₀-⇑ᶜ-cancel (Γ , A) B rewrite substCtx-σ₀-⇑ᶜ-cancel Γ B
-  | []ᵗ-cancel-shift A B = refl
+substCtx-σ₀-⇑ᶜ-cancel (Γ , A) B rewrite substCtx-σ₀-⇑ᶜ-cancel Γ B = refl
+{-# REWRITE substCtx-σ₀-⇑ᶜ-cancel #-}
 
 _[_]ᵀ : ∀ {Δ} {Γ : Ctx Δ} {A : Type (Δ ,α)}
   → Δ ,α ; ⇑ᶜ Γ ⊢ A
   → (B : Type Δ)
+    ---------------------------
   → Δ ; Γ ⊢ A [ B ]ᵗ
-_[_]ᵀ {Γ = Γ} {A = A} N B =
-  substEq (_ ;_⊢ A [ B ]ᵗ) (substCtx-σ₀-⇑ᶜ-cancel Γ B) (substᵀ (σ₀ᵗ B) N)
-
+_[_]ᵀ N B = substᵀ (σ₀ᵗ B) N
 
 
 ------------------------------------
@@ -428,25 +417,40 @@ ext ρ (S x)  = S (ρ x)
   → Γ →ʳ Γ'
   → (⇑ᶜ Γ) →ʳ (⇑ᶜ Γ')
 ⇑ʳ {Γ = ∅}     ρ ()
-⇑ʳ {Γ = Γ , A} ρ Z      = ⇑ᵗ-∋ (ρ Z)
+⇑ʳ {Γ = Γ , A} ρ Z      = renameᵗ-∋ S_ (ρ Z)
 ⇑ʳ {Γ = Γ , A} ρ (S x)  = ⇑ʳ (λ y → ρ (S y)) x
 
 rename : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ}
   → Γ →ʳ Γ'
   → Δ ; Γ ⊢ A
   → Δ ; Γ' ⊢ A
-rename ρ `zero    = `zero
-rename ρ (` x)    = ` (ρ x)
+rename ρ `zero        = `zero
+rename ρ (` x)        = ` (ρ x)
 rename ρ (ƛ _ ˙ N)    = ƛ _ ˙ (rename (ext ρ) N)
-rename ρ (L · M)  = rename ρ L · rename ρ M
-rename ρ (`⟨ L , M ⟩)  = `⟨ rename ρ L , rename ρ M ⟩
-rename ρ (`proj₁ M)  = `proj₁ (rename ρ M)
-rename ρ (`proj₂ M)  = `proj₂ (rename ρ M)
-rename ρ (Λ N)    = Λ (rename (⇑ʳ ρ) N)
-rename ρ (M ∙ B)  = rename ρ M ∙ B
+rename ρ (L · M)      = rename ρ L · rename ρ M
+rename ρ (`⟨ L , M ⟩) = `⟨ rename ρ L , rename ρ M ⟩
+rename ρ (`proj₁ M)   = `proj₁ (rename ρ M)
+rename ρ (`proj₂ M)   = `proj₂ (rename ρ M)
+rename ρ (Λ N)        = Λ (rename (⇑ʳ ρ) N)
+rename ρ (M ∙ B)      = rename ρ M ∙ B
 
 _→ˢ_ : ∀ {Δ} → Ctx Δ → Ctx Δ → Set
 _→ˢ_ Γ Γ' = ∀ {A} → Γ ∋ A → _ ; Γ' ⊢ A
+
+infixr 6 _•_
+
+_•_ : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ}
+  → Δ ; Γ' ⊢ A
+  → Γ →ˢ Γ'
+  → (Γ , A) →ˢ Γ'
+(M • σ) Z      = M
+(M • σ) (S x)  = σ x
+
+id : ∀ {Δ} {Γ : Ctx Δ} → Γ →ˢ Γ
+id x = ` x
+
+↑ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ} → Γ →ˢ (Γ , A)
+↑ x = ` (S x)
 
 ⇑ : ∀ {Δ} {Γ : Ctx Δ} {A B : Type Δ}
   → Δ ; Γ ⊢ A
@@ -459,6 +463,9 @@ exts : ∀ {Δ} {Γ Δ' : Ctx Δ} {A : Type Δ}
 exts σ Z      = ` Z
 exts σ (S x)  = ⇑ (σ x)
 
+⇑ᵀ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ} → Δ ; Γ ⊢ A → Δ ,α ; ⇑ᶜ Γ ⊢ renameᵗ S_ A
+⇑ᵀ = renameᵀ S_
+
 ⇑ˢ : ∀ {Δ} {Γ Δ' : Ctx Δ}
   → Γ →ˢ Δ'
   → (⇑ᶜ Γ) →ˢ (⇑ᶜ Δ')
@@ -470,28 +477,30 @@ subst : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ}
   → Γ →ˢ Γ'
   → Δ ; Γ ⊢ A
   → Δ ; Γ' ⊢ A
-subst σ `zero    = `zero
-subst σ (` x)    = σ x
+subst σ `zero        = `zero
+subst σ (` x)        = σ x
 subst σ (ƛ A ˙ N)    = ƛ A ˙ (subst (exts σ) N)
-subst σ (L · M)  = subst σ L · subst σ M
-subst σ (`⟨ L , M ⟩)  = `⟨ subst σ L , subst σ M ⟩
-subst σ (`proj₁ M)  = `proj₁ (subst σ M)
-subst σ (`proj₂ M)  = `proj₂ (subst σ M)
-subst σ (Λ N)    = Λ (subst (⇑ˢ σ) N)
-subst σ (M ∙ B)  = subst σ M ∙ B
+subst σ (L · M)      = subst σ L · subst σ M
+subst σ (`⟨ L , M ⟩) = `⟨ subst σ L , subst σ M ⟩
+subst σ (`proj₁ M)   = `proj₁ (subst σ M)
+subst σ (`proj₂ M)   = `proj₂ (subst σ M)
+subst σ (Λ N)        = Λ (subst (⇑ˢ σ) N)
+subst σ (M ∙ B)      = subst σ M ∙ B
 
-σ₀ : ∀ {Δ} {Γ : Ctx Δ} {A : Type Δ}
-  → Δ ; Γ ⊢ A
-  → (Γ , A) →ˢ Γ
-σ₀ M Z      = M
-σ₀ M (S x)  = ` x
+infixr 5 _⨟_
+
+_⨟_ : ∀ {Δ} {Γ₁ Γ₂ Γ₃ : Ctx Δ} → Γ₁ →ˢ Γ₂ → Γ₂ →ˢ Γ₃ → Γ₁ →ˢ Γ₃
+(σ ⨟ τ) x = subst τ (σ x)
+
+σ₀ : ∀ {Δ Γ A} → Δ ; Γ ⊢ A → (Γ , A) →ˢ Γ
+σ₀ M = M • id
 
 _[_] : ∀ {Δ} {Γ : Ctx Δ} {A B : Type Δ}
   → Δ ; Γ , A ⊢ B
   → Δ ; Γ ⊢ A
+    ------------------
   → Δ ; Γ ⊢ B
 _[_] N M = subst (σ₀ M) N
-
 
 
 ----------------------------------------
