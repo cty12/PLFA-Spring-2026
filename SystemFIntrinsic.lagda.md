@@ -10,14 +10,45 @@ open import Agda.Builtin.Equality.Rewrite
 open import Relation.Binary.PropositionalEquality
             using    (_≡_; refl; cong; cong₂; sym; trans)
             renaming (subst to substEq)
+open import Data.Product using (Σ-syntax; ∃-syntax; _×_)
+  renaming (_,_ to ⟨_,_⟩)
+open import Agda.Builtin.Unit using (⊤)
+open import Level using (0ℓ; Lift; lift) renaming (suc to lsuc)
 open import Function using (case_of_)
 
 postulate
   extensionality : ∀ {A B : Set} {f g : A → B}
     → (∀ (x : A) → f x ≡ g x)
-      -----------------------
+      ---------------------------
     → f ≡ g
 ```
+
+(Quoting from TAPL)
+Abstraction principle: Each significant piece of functionality in a
+program should be implemented in just one place in the source code.
+Where similar functions are carried out by distinct pieces of code, it
+is generally beneficial to combine them into one by abstracting out the
+varying parts.
+
+For example,
+
+cons-int  : Int -> List Int -> List Int
+cons-bool : Bool -> List Bool -> List Bool
+
+Only types vary. We abstract out a type from a term:
+
+cons : ∀α. α -> List α -> List α
+
+We can then instantiate this abstract term with concrete types.
+
+(Quoting from TAPL again)
+Type systems that allow a single piece of code to be used with multiple types
+are collectively known as polymorphic systems (poly = many, morph = form).
+
+In this lecture we focus on parametric polymorphism, which allows
+a single piece of code to be typed “generically,” using variables
+in place of actual types, and then instantiated with particular types
+as needed.
 
 System F: STLC with universal types
 
@@ -864,4 +895,141 @@ proj₂-↠ (M —→⟨ M—→M′ ⟩ M′—↠M″) =
   → M ∙ B —↠ M′ ∙ B
 ∙-↠ {B = B} (M ∎) = (M ∙ B) ∎
 ∙-↠ {B = B} (M —→⟨ M—→M′ ⟩ M′—↠M″) = (M ∙ B) —→⟨ ξ-∙ M—→M′ ⟩ ∙-↠ {B = B} M′—↠M″
+```
+
+(Adapted the notes https://www.cs.uoregon.edu/research/summerschool/summer16/notes/AhmedLR.pdf
+ into Agda)
+
+We do not require much of the relation. It has to be a set of pairs of values,
+and the values in every pair of the relation have to be closed and well typed under
+the corresponding type:
+
+```
+Rel : Type ∅ → Type ∅ → Set₁
+Rel A B = (V : ∅ ; ∅ ⊢ A) → (W : ∅ ; ∅ ⊢ B) → Value V → Value W → Set
+```
+
+We define relational substitution ρ with projections to the
+left type substitution, right type substitution, and the relation
+assigned to each type variable.
+
+```
+record RelSub (Δ : TyCtx) : Set₁ where
+  field
+    ρ₁ : Δ ⇒ˢ ∅
+    ρ₂ : Δ ⇒ˢ ∅
+    ρR : ∀ α → Rel (ρ₁ α) (ρ₂ α)
+
+open RelSub public
+
+emptyRelSub : RelSub ∅
+(emptyRelSub .ρ₁) = idᵗ
+(emptyRelSub .ρ₂) = idᵗ
+(emptyRelSub .ρR) ()
+
+extendRelSub : ∀ {Δ}
+  → (ρ : RelSub Δ)
+  → (A₁ A₂ : Type ∅)
+  → Rel A₁ A₂
+  → RelSub (Δ ,α)
+(extendRelSub ρ A₁ A₂ R) .ρ₁        = A₁ •ᵗ ρ₁ ρ
+(extendRelSub ρ A₁ A₂ R) .ρ₂        = A₂ •ᵗ ρ₂ ρ
+(extendRelSub ρ A₁ A₂ R) .ρR Z      = R
+(extendRelSub ρ A₁ A₂ R) .ρR (S α)  = ρR ρ α
+```
+
+We then define the interpretation of values and expressions.
+(Recall that logical relations are type-indexed inductive
+relations.)
+
+```
+ValueRel : ∀ {Δ}
+  → (A : Type Δ)
+  → (ρ : RelSub Δ)
+  → (V : ∅ ; ∅ ⊢ substᵗ (ρ₁ ρ) A)
+  → (W : ∅ ; ∅ ⊢ substᵗ (ρ₂ ρ) A)
+  → Value V
+  → Value W
+  → Set₁
+
+ExprRel : ∀ {Δ}
+  → (A : Type Δ)
+  → (ρ : RelSub Δ)
+  → ∅ ; ∅ ⊢ substᵗ (ρ₁ ρ) A
+  → ∅ ; ∅ ⊢ substᵗ (ρ₂ ρ) A
+  → Set₁
+
+ValueRel (` α) ρ V W v w = Lift _ (ρR ρ α V W v w)
+ValueRel `Nat ρ `zero `zero V-zero V-zero = Lift (lsuc 0ℓ) ⊤
+ValueRel (A ⇒ B) ρ (ƛ _ ˙ N) (ƛ _ ˙ M) V-ƛ V-ƛ =
+  ∀ {V W} (v : Value V) (w : Value W)
+   → ValueRel A ρ V W v w
+   → ExprRel B ρ (N [ V ]) (M [ W ])
+ValueRel (A `× B) ρ (`⟨ V₁ , V₂ ⟩) (`⟨ W₁ , W₂ ⟩) (V-⟨⟩ v₁ v₂) (V-⟨⟩ w₁ w₂) =
+  ValueRel A ρ V₁ W₁ v₁ w₁ × ValueRel B ρ V₂ W₂ v₂ w₂
+ValueRel (`∀ A) ρ (Λ N) (Λ M) V-Λ V-Λ =
+  ∀ (A₁ A₂ : Type ∅)
+   → (R : Rel A₁ A₂)
+   → ExprRel A (extendRelSub ρ A₁ A₂ R) (N [ A₁ ]ᵀ) (M [ A₂ ]ᵀ)
+
+-- Both terms reduce to values related by the value interpretation
+ExprRel A ρ M N =
+  ∃[ V ] ∃[ W ] ∃[ v ] ∃[ w ]
+    (M —↠ V) × (N —↠ W) × ValueRel A ρ V W v w
+```
+
+We also need the closing (term variable) substitutions:
+
+```
+record RelEnv {Δ} (Γ : Ctx Δ) (ρ : RelSub Δ) : Set₁ where
+  field
+    γ₁ : substCtx (ρ₁ ρ) Γ →ˢ ∅
+    γ₂ : substCtx (ρ₂ ρ) Γ →ˢ ∅
+
+open RelEnv public
+
+emptyRelEnv : ∀ {ρ : RelSub ∅} → RelEnv ∅ ρ
+(emptyRelEnv .γ₁) = id
+(emptyRelEnv .γ₂) = id
+```
+
+```
+LogicalRel : ∀ {Δ Γ A} → (M N : Δ ; Γ ⊢ A) → Set₁
+LogicalRel {Δ} {Γ} {A} M N = ∀ (ρ : RelSub Δ) (γ : RelEnv Γ ρ)
+  → ExprRel A ρ (subst (γ .γ₁) (substᵀ (ρ .ρ₁) M)) (subst (γ .γ₂) (substᵀ (ρ .ρ₂) N))
+```
+
+With the logical relation defined, we state the fundamental property:
+
+```
+-- Fundamental Property: every well-typed term is related to itself.
+postulate
+  fundamental : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A) → LogicalRel M M
+```
+
+
+```
+-- R = {(V, V)}
+idR : ∀ {A} → (V : ∅ ; ∅ ⊢ A) → Rel A A
+idR V V′ W′ _ _ = V ≡ V′ × V ≡ W′
+
+free-theorem-id : ∀ {A : Type ∅}
+  → (M : ∅ ; ∅ ⊢ `∀ (` Z ⇒ ` Z))
+  → (V : ∅ ; ∅ ⊢ A)
+  → Value V
+    ------------------------
+  → (M ∙ A) · V —↠ V
+free-theorem-id {A} M V v =
+  case fundamental M emptyRelSub emptyRelEnv of λ where
+  ⟨ Λ N₁ , ⟨ Λ N₂ , ⟨ V-Λ , ⟨ V-Λ , ⟨ M↠ΛN₁ , ⟨ M↠ΛN₂ , rel ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
+    case rel A A (idR V) of λ where
+    ⟨ ƛ _ ˙ N₁′ , ⟨ ƛ _ ˙ N₂′ , ⟨ V-ƛ , ⟨ V-ƛ , ⟨ N₁[A]↠ƛN₁′ , ⟨ N₂[A]↠ƛN₂′ , rel′ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
+      case rel′ v v (lift ⟨ refl , refl ⟩) of λ where
+      ⟨ W₁ , ⟨ W₂ , ⟨ w₁ , ⟨ w₂ , ⟨ N₁′[V]↠W₁ , ⟨ N₂′[V]↠W₂ , lift ⟨ refl , _ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ ⟩ →
+         —↠-trans (·₁-↠ (∙-↠ M↠ΛN₁))
+        (—↠-trans (((Λ N₁ ∙ A) · V) —→⟨ ξ-·₁ β-Λ ⟩ (((N₁ [ A ]ᵀ) · V) ∎))
+        (—↠-trans (·₁-↠ N₁[A]↠ƛN₁′)
+        (—↠-trans (((ƛ _ ˙ N₁′) · V) —→⟨ β-ƛ v ⟩ ((N₁′ [ V ]) ∎)) N₁′[V]↠W₁)))
+
+-- TBA add an example of representation independence
 ```
