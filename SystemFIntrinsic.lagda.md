@@ -188,14 +188,14 @@ _•ᵗ_ : ∀ {Δ Δ'} → Type Δ' → Δ ⇒ˢ Δ' → (Δ ,α) ⇒ˢ Δ'
 (A •ᵗ σ) Z      = A
 (A •ᵗ σ) (S α)  = σ α
 
-infixr 5 _⨟ᵗ_
-
 substᵗ : ∀ {Δ Δ'} → Δ ⇒ˢ Δ' → Type Δ → Type Δ'
 substᵗ σ (` x)   = σ x
 substᵗ σ `Nat     = `Nat
 substᵗ σ `Bool    = `Bool
 substᵗ σ (A ⇒ B)  = substᵗ σ A ⇒ substᵗ σ B
 substᵗ σ (`∀ A)  = `∀ (substᵗ (extsᵗ σ) A)
+
+infixr 5 _⨟ᵗ_
 
 _⨟ᵗ_ : ∀ {Δ₁ Δ₂ Δ₃} → Δ₁ ⇒ˢ Δ₂ → Δ₂ ⇒ˢ Δ₃ → Δ₁ ⇒ˢ Δ₃
 (σ ⨟ᵗ τ) α = substᵗ τ (σ α)
