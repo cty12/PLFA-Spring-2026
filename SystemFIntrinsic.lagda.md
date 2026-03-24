@@ -893,8 +893,9 @@ if-↠ {M = M} {N = N} (L —→⟨ L—→L′ ⟩ L′—↠L″) =
 ∙-↠ {B = B} (M —→⟨ M—→M′ ⟩ M′—↠M″) = (M ∙ B) —→⟨ ξ-∙ M—→M′ ⟩ ∙-↠ {B = B} M′—↠M″
 ```
 
-Parametricity: polymorphic programs behave uniformly. More specifically,
-two programs of the same type have identical behavior.
+Parametricity: the language does not allow programs that inspect values whose types are
+type variables. Because of that, polymorphic functions of the same type take related
+inputs to related outputs.
 
 (The Agda code below is based on the lecture notes at
 https://www.cs.uoregon.edu/research/summerschool/summer16/notes/AhmedLR.pdf)
