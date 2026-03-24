@@ -622,37 +622,6 @@ subst σ (L · M)      = subst σ L · subst σ M
 subst σ (Λ N)        = Λ (subst (⇑ˢ σ) N)
 subst σ (M ∙ B)      = subst σ M ∙ B
 
-exts-cong : ∀ {Δ} {Γ Γ' : Ctx Δ} {σ τ : Γ →ˢ Γ'}
-  → (∀ {A} (x : Γ ∋ A) → σ x ≡ τ x)
-  → ∀ {A B} (x : Γ , B ∋ A) → exts σ x ≡ exts τ x
-exts-cong σ≡τ Z      = refl
-exts-cong σ≡τ (S x)  = cong ⇑ (σ≡τ x)
-
-subst-cong : ∀ {Δ} {Γ Γ' : Ctx Δ} {A : Type Δ} {σ τ : Γ →ˢ Γ'}
-  → (∀ {B} (x : Γ ∋ B) → σ x ≡ τ x)
-  → (M : Δ ; Γ ⊢ A)
-  → subst σ M ≡ subst τ M
-subst-cong σ≡τ `zero         = refl
-subst-cong σ≡τ `true         = refl
-subst-cong σ≡τ `false        = refl
-subst-cong σ≡τ (`suc M)      = cong `suc_ (subst-cong σ≡τ M)
-subst-cong σ≡τ (`case-nat L M N)
-  rewrite subst-cong σ≡τ L | subst-cong σ≡τ M | subst-cong (exts-cong σ≡τ) N = refl
-subst-cong σ≡τ (`if_then_else L M N)
-  rewrite subst-cong σ≡τ L | subst-cong σ≡τ M | subst-cong σ≡τ N = refl
-subst-cong σ≡τ (` x)         = σ≡τ x
-subst-cong σ≡τ (ƛ A ˙ M)     = cong (ƛ A ˙_) (subst-cong (exts-cong σ≡τ) M)
-subst-cong σ≡τ (L · M)       = cong₂ _·_ (subst-cong σ≡τ L) (subst-cong σ≡τ M)
-subst-cong σ≡τ (Λ M)         = cong Λ_ (subst-cong (⇑ˢ-cong σ≡τ) M)
-  where
-  ⇑ˢ-cong : ∀ {Δ} {Γ Γ' : Ctx Δ} {σ τ : Γ →ˢ Γ'}
-    → (∀ {A} (x : Γ ∋ A) → σ x ≡ τ x)
-    → ∀ {A} (x : ⇑ᶜ Γ ∋ A) → ⇑ˢ σ x ≡ ⇑ˢ τ x
-  ⇑ˢ-cong {Γ = ∅} σ≡τ ()
-  ⇑ˢ-cong {Γ = Γ , B} σ≡τ Z      = cong ⇑ᵀ (σ≡τ Z)
-  ⇑ˢ-cong {Γ = Γ , B} σ≡τ (S x)  = ⇑ˢ-cong (λ y → σ≡τ (S y)) x
-subst-cong σ≡τ (M ∙ B)       = cong (λ N → N ∙ B) (subst-cong σ≡τ M)
-
 sub-id : ∀ {Δ Γ A} (M : Δ ; Γ ⊢ A)
     ---------------------------------
   → subst id M ≡ M
@@ -660,12 +629,7 @@ sub-id `zero = refl
 sub-id `true = refl
 sub-id `false = refl
 sub-id (`suc M) rewrite sub-id M = refl
-sub-id (`case-nat L M N) rewrite sub-id L | sub-id M =
-  cong (`case-nat L M) (trans (subst-cong exts-id N) (sub-id N))
-  where
-  exts-id : ∀ {B} (x : _ , `Nat ∋ B) → exts (id {Γ = _}) x ≡ id x
-  exts-id Z      = refl
-  exts-id (S x)  = refl
+sub-id (`case-nat L M N) rewrite sub-id L | sub-id M = cong (`case-nat L M) (sub-id N)
 sub-id (`if_then_else L M N) rewrite sub-id L | sub-id M | sub-id N = refl
 sub-id (` x) = refl
 sub-id (ƛ A ˙ M) = cong (ƛ A ˙_) (sub-id M)
