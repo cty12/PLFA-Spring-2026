@@ -997,6 +997,9 @@ emptyRelEnv : ∀ {ρ : RelSub ∅} → RelEnv ∅ ρ
 (emptyRelEnv .γ₂) = id
 ```
 
+Δ ; Γ ⊢ M ≈ N : A ≜
+  (Δ ; Γ ⊢ M : A) ∧ (Δ ; Γ ⊢ N : A) ∧ (∀ ρ. ∀ γ. (ρ₁ (γ₁ M) , ρ₂ (γ₂ N)) ∈ ℰ⟦ A ⟧ ρ)
+
 ```
 LogicalRel : ∀ {Δ Γ A} → (M N : Δ ; Γ ⊢ A) → Set₁
 LogicalRel {Δ} {Γ} {A} M N = ∀ (ρ : RelSub Δ) (γ : RelEnv Γ ρ)
