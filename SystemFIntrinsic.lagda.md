@@ -1121,3 +1121,8 @@ free-theorem-rep M =
                    N₂″[flip]↠W)
               , VW∈R ⟩ ⟩ ⟩ ⟩ ⟩ ⟩
 ```
+
+(Exercise) Add pairs to the calculus and prove that "swap" swaps
+as a free theorem:
+If ∅ ; ∅ ⊢ M : ∀ α. ∀ β. α × β → β × α and ∅ ; ∅ ⊢ V : A and ∅ ; ∅ ⊢ W : B
+then M [ A ] [ B ] ⟨ V , W ⟩ —↠ ⟨ W , V ⟩
