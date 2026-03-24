@@ -1020,6 +1020,13 @@ with different ρ and γ may give us very different programs.
 
 ```
 
+-- | Termination is a direct corollary of fundamental
+terminate : ∀ {A}
+  → (M : ∅ ; ∅ ⊢ A)
+  → ∃[ V ] (M —↠ V) × Value V
+terminate M = case fundamental M emptyRelSub emptyRelEnv of λ where
+  ⟨ V , ⟨ _ , ⟨ v , ⟨ _ , ⟨ M↠V , _ ⟩ ⟩ ⟩ ⟩ ⟩ → ⟨ V , ⟨ M↠V , v ⟩ ⟩
+
 -- | Free theorem (identity):
 
 -- R = {(V, V)}
