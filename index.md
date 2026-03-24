@@ -213,7 +213,7 @@ Ideas for project language features:
 |          | 12  | Confluence continued |
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
-|          | 24  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) 
+|          | 24  | [SystemF](./SystemF.lagda.md) Universal Types (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) | [link](./SystemFIntrinsic.lagda.md) |
 |          | 26  | [Gradual Typing](./GradualTyping.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)| 
 |          | 31  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
 | April    |  2  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
