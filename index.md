@@ -111,10 +111,10 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
     * Extend the bidirectional typing functions `synthesize` and `inherit`
       to handle products and sums.
 
-* March 10, Do the `variants` exercise in
+* March 22, Do the `variants` exercise in
    [Subtyping and Records](./lecture-notes-Subtyping.lagda.md).
 
-* March 24, Do the `products` exercise in
+* April 6, Do the `products` exercise in
    [Bisimulation](https://plfa.github.io/Bisimulation/)
    and the `big-alt-implies-multi` exercise
    in [BigStep](https://plfa.github.io/BigStep/).
