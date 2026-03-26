@@ -523,15 +523,12 @@ rename-preserve
   → ρ ⦂ Γ ⇒ʳ Γ′
   → Γ ⊢ᶜ M ⦂ A
   → Γ′ ⊢ᶜ rename ρ M ⦂ A
-rename-preserve ρ-typed (⊢` ∋x) = ⊢` (ρ-typed ∋x)
-rename-preserve ρ-typed ⊢$ = ⊢$
-rename-preserve ρ-typed (⊢ƛ ⊢N) =
-  ⊢ƛ (rename-preserve (⊢ext ρ-typed) ⊢N)
-rename-preserve ρ-typed (⊢· ⊢L ⊢M) =
-  ⊢· (rename-preserve ρ-typed ⊢L) (rename-preserve ρ-typed ⊢M)
-rename-preserve ρ-typed (⊢cast ⊢M ⊢c) =
-  ⊢cast (rename-preserve ρ-typed ⊢M) ⊢c
-rename-preserve ρ-typed ⊢blame = ⊢blame
+rename-preserve ⊢ρ (⊢` ∋x) = ⊢` (⊢ρ ∋x)
+rename-preserve ⊢ρ ⊢$ = ⊢$
+rename-preserve ⊢ρ (⊢ƛ ⊢N) = ⊢ƛ (rename-preserve (⊢ext ⊢ρ) ⊢N)
+rename-preserve ⊢ρ (⊢· ⊢L ⊢M) = ⊢· (rename-preserve ⊢ρ ⊢L) (rename-preserve ⊢ρ ⊢M)
+rename-preserve ⊢ρ (⊢cast ⊢M ⊢c) = ⊢cast (rename-preserve ⊢ρ ⊢M) ⊢c
+rename-preserve ⊢ρ ⊢blame = ⊢blame
 
 ⊢exts : ∀ {Γ Γ′ A σ}
   → σ ⦂ Γ ⇒ˢ Γ′
@@ -544,15 +541,12 @@ subst-preserve
   → σ ⦂ Γ ⇒ˢ Γ′
   → Γ ⊢ᶜ M ⦂ A
   → Γ′ ⊢ᶜ subst σ M ⦂ A
-subst-preserve σ-typed (⊢` ∋x) = σ-typed ∋x
-subst-preserve σ-typed ⊢$ = ⊢$
-subst-preserve σ-typed (⊢ƛ ⊢N) =
-  ⊢ƛ (subst-preserve (⊢exts σ-typed) ⊢N)
-subst-preserve σ-typed (⊢· ⊢L ⊢M) =
-  ⊢· (subst-preserve σ-typed ⊢L) (subst-preserve σ-typed ⊢M)
-subst-preserve σ-typed (⊢cast ⊢M ⊢c) =
-  ⊢cast (subst-preserve σ-typed ⊢M) ⊢c
-subst-preserve σ-typed ⊢blame = ⊢blame
+subst-preserve ⊢σ (⊢` ∋x) = ⊢σ ∋x
+subst-preserve ⊢σ ⊢$ = ⊢$
+subst-preserve ⊢σ (⊢ƛ ⊢N) = ⊢ƛ (subst-preserve (⊢exts ⊢σ) ⊢N)
+subst-preserve ⊢σ (⊢· ⊢L ⊢M) = ⊢· (subst-preserve ⊢σ ⊢L) (subst-preserve ⊢σ ⊢M)
+subst-preserve ⊢σ (⊢cast ⊢M ⊢c) = ⊢cast (subst-preserve ⊢σ ⊢M) ⊢c
+subst-preserve ⊢σ ⊢blame = ⊢blame
 
 sub-preserve
   : ∀ {A B N M}
@@ -579,8 +573,8 @@ frame-preserve : ∀ {F M N A}
     ------------------------
   → [] ⊢ᶜ plug F N ⦂ A
 
-frame-preserve {F = □· M₁}  (⊢· ⊢M ⊢M₁) M→N = ⊢· (preserve ⊢M M→N) ⊢M₁
-frame-preserve {F = V ·□ _} (⊢· ⊢V ⊢M) M→N = ⊢· ⊢V (preserve ⊢M M→N)
+frame-preserve {F = □· M₁}  (⊢· ⊢L ⊢M) L→L′ = ⊢· (preserve ⊢L L→L′) ⊢M
+frame-preserve {F = V ·□ _} (⊢· ⊢V ⊢M) M→M′ = ⊢· ⊢V (preserve ⊢M M→M′)
 frame-preserve {F = □⟨ c ⟩} (⊢cast ⊢M ⊢c) M→N = ⊢cast (preserve ⊢M M→N) ⊢c
 
 preserve ⊢M (ξξ refl refl M→N)    = frame-preserve ⊢M M→N
@@ -610,7 +604,7 @@ coerce ℓ (★~⇒ A~★ ★~B) = ((★ ⇒ ★) `? ℓ) ⨟ (coerce ℓ A~★ 
 coerce ℓ (⇒~★ ★~A B~★) = (coerce ℓ ★~A ⇒ coerce ℓ B~★) ⨟ ((★ ⇒ ★) !)
 coerce ℓ (~-⇒ c d) = coerce ℓ c ⇒ coerce ℓ d
 
-coerce-wt : ∀ {A B} (ℓ : Nat) (p : A ~ B) → ⊢ coerce ℓ p ⦂ A ⇒ B
+coerce-wt : ∀ {A B} (ℓ : Nat) (A~B : A ~ B) → ⊢ coerce ℓ A~B ⦂ A ⇒ B
 coerce-wt ℓ ~-ℕ = ⊢id
 coerce-wt ℓ ~-★ = ⊢id
 coerce-wt ℓ ★~ℕ = ⊢? G-ℕ
@@ -644,7 +638,7 @@ GTLC is type safe because (1) the compilation from GTLC
 to CC preserves types and (2) CC is type safe.
 
 ```
-compile-preserves : ∀ {Γ M A} (d : Γ ⊢ M ⦂ A) → Γ ⊢ᶜ compile d ⦂ A
+compile-preserves : ∀ {Γ M A} (⊢M : Γ ⊢ M ⦂ A) → Γ ⊢ᶜ compile ⊢M ⦂ A
 compile-preserves (⊢` ∋x) = ⊢` (compile-∋ ∋x)
 compile-preserves (⊢$ {n = n}) = ⊢$
 compile-preserves (⊢ƛ {A = A} ⊢N) = ⊢ƛ (compile-preserves ⊢N)
