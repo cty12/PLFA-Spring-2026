@@ -103,7 +103,7 @@ data _~_ : Type → Type → Set where
 ~★ (A ⇒ B) = ⇒~★ (★~ A) (~★ B)
 ```
 
-# Typeping Contexts
+# Typing Contexts
 
 ```
 Var = Nat
@@ -133,7 +133,7 @@ data Term : Set where
   _·_＠_   : Term → Term → Nat → Term
 ```
 
-## Typeping Rules
+## Typing Rules
 
 ```
 
@@ -223,7 +223,7 @@ data Coercion : Set where
   _⨟_  : Coercion → Coercion → Coercion
 ```
 
-## Typeping Rules for Coercions
+## Typing Rules for Coercions
 
 ```
 -- | We restrict the source of an injection or the target
@@ -277,7 +277,7 @@ data Termᶜ : Set where
   blame    : (ℓ : Nat) → Termᶜ
 ```
 
-## Typeping Rules for CC
+## Typing Rules for CC
 
 ```
 infix 4 _⊢ᶜ_⦂_
