@@ -411,7 +411,7 @@ data _—→_ : Termᶜ → Termᶜ → Set where
   β-seq : ∀ {V c d}
     → Value V
       ------------------------------------------------------
-    → V ⟨ c ⨟ d ⟩ —→ (V ⟨ c ⟩) ⟨ d ⟩
+    → V ⟨ c ⨟ d ⟩ —→ V ⟨ c ⟩ ⟨ d ⟩
 
   β-⇒ : ∀ {V W c d}
     → Value V
@@ -422,13 +422,13 @@ data _—→_ : Termᶜ → Termᶜ → Set where
   β-proj-inj-ok : ∀ {V G ℓ}
     → Value V
       ------------------------------------------------------
-    → (V ⟨ G ! ⟩) ⟨ G `? ℓ ⟩ —→ V
+    → V ⟨ G ! ⟩ ⟨ G `? ℓ ⟩ —→ V
 
   β-proj-inj-bad : ∀ {V G H ℓ}
     → Value V
     → G ≢ H
       ------------------------------------------------------------------
-    → (V ⟨ G ! ⟩) ⟨ H `? ℓ ⟩ —→ blame ℓ
+    → V ⟨ G ! ⟩ ⟨ H `? ℓ ⟩ —→ blame ℓ
 
 
 pattern ξ F M→N  = ξξ {F = F} refl refl M→N
@@ -456,9 +456,8 @@ canonical-⇒ : ∀ {V A B}
   → ∃[ N ] V ≡ ƛ A ˙ N                                ⊎
      ∃[ W ] ∃[ c ] ∃[ d ] Value W × V ≡ W ⟨ c ⇒ d ⟩
 canonical-⇒ (V-ƛ {N = N}) (⊢ƛ ⊢N) = inj₁ ⟨ N , refl ⟩
-canonical-⇒ (V-cast⇒ {V = W} {c = c} {d = d} w) pf with pf
-... | ⊢cast _ ⊢c with ⊢c
-... | ⊢⇒ _ _ = inj₂ ⟨ W , ⟨ c , ⟨ d , ⟨ w , refl ⟩ ⟩ ⟩ ⟩
+canonical-⇒ (V-cast⇒ {V = W} {c = c} {d = d} w) (⊢cast _ (⊢⇒ _ _)) =
+  inj₂ ⟨ W , ⟨ c , ⟨ d , ⟨ w , refl ⟩ ⟩ ⟩ ⟩
 ```
 
 Progress
