@@ -214,7 +214,7 @@ Ideas for project language features:
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
 |          | 24  | [SystemF, Universal Types](./SystemFIntrinsic.lagda.md) (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) | [link](./SystemFIntrinsic.lagda.md) [old notes (ABT)](./SystemF.lagda.md) |
-|          | 26  | [Gradual Typing](./GradualTyping.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)| 
+|          | 26  | [Gradual Typing](./lecture-notes-GradualTypingCoercions.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)|  [link](./lecture-notes-GradualTypingCoercions.lagda.md) [old notes (ABT)](./SystemF.lagda.md) |
 |          | 31  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus |
 | April    |  2  | [Denotational](https://plfa.github.io/Denotational/) continued, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
 |          |  7  | [Compositional](https://plfa.github.io/Compositional/)  |
