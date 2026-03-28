@@ -114,12 +114,7 @@ Tuesday and Thursday at 2:20-3:35pm in Wylie Hall (WY) Room 101.
 * March 22, Do the `variants` exercise in
    [Subtyping and Records](./lecture-notes-Subtyping.lagda.md).
 
-* April 6, Do the `products` exercise in
-   [Bisimulation](https://plfa.github.io/Bisimulation/)
-   and the `big-alt-implies-multi` exercise
-   in [BigStep](https://plfa.github.io/BigStep/).
-
-* Project Description Due.
+* Project Description Due April 6.
     Write 1 page describing your project.  The description should
 	include a list of the formal artifacts (definitions, theorems)
 	that you plan to turn in.
