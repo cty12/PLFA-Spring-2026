@@ -1,5 +1,6 @@
 open import Relation.Binary.PropositionalEquality using (_≡_)
 open import Relation.Nullary using (Dec)
+open import Data.Bool using (Bool; true; false; _∧_; _∨_)
 
 
 record LabelLattice : Set₁ where
@@ -44,8 +45,7 @@ module IFC (𝑳 : LabelLattice) where
   infixl 8 _`∧_
   infixl 8 _`∨_
   infix  9 val_
-  infix  9 `true_
-  infix  9 `false_
+  infix  9 $_of_
   infix  9 `_
   infix  9 S_
 
@@ -107,14 +107,10 @@ module IFC (𝑳 : LabelLattice) where
   -- values
   data _⊢ᵛ_ where
 
-    `true_ : ∀ {Γ}
+    $_of_ : ∀ {Γ}
+      → (b : Bool)
       → (ℓ : ℒ)
-        ------------------ (Tv-True)
-      → Γ ⊢ᵛ `𝔹 of ℓ
-
-    `false_ : ∀ {Γ}
-      → (ℓ : ℒ)
-        ------------------ (Tv-False)
+        ------------------- (Tv-Bool)
       → Γ ⊢ᵛ `𝔹 of ℓ
 
     -- FUN:
@@ -125,8 +121,7 @@ module IFC (𝑳 : LabelLattice) where
       → Γ ⊢ᵛ (A ⇒ B) of ℓ
 
   stamp-val : ∀ {Γ A} → Γ ⊢ᵛ A → (ℓ : ℒ) → Γ ⊢ᵛ (stamp A ℓ)
-  stamp-val (`true ℓ₁)  ℓ₂ = `true  (ℓ₁ ⊔ ℓ₂)
-  stamp-val (`false ℓ₁) ℓ₂ = `false (ℓ₁ ⊔ ℓ₂)
+  stamp-val ($ b of ℓ₁) ℓ₂ = $ b of (ℓ₁ ⊔ ℓ₂)
   stamp-val (ƛ N of ℓ₁) ℓ₂ = ƛ N of (ℓ₁ ⊔ ℓ₂)
 
   -- intrinsically-typed terms inhibit a typing judgement
@@ -173,10 +168,8 @@ module IFC (𝑳 : LabelLattice) where
         --------------- (T-Subsumption)
       → Γ ⊢ᵉ B
 
-  _→ʳ_ : Context → Context → Set
+  _→ʳ_ _→ˢ_ : Context → Context → Set
   Γ →ʳ Δ = ∀ {X} → Γ ∋ X → Δ ∋ X
-
-  _→ˢ_ : Context → Context → Set
   Γ →ˢ Δ = ∀ {X} → Γ ∋ X → Δ ⊢ᵉ X
 
   ext : ∀ {Γ Δ A} → Γ →ʳ Δ → (Γ , A) →ʳ (Δ , A)
@@ -186,8 +179,7 @@ module IFC (𝑳 : LabelLattice) where
   renameᵛ : ∀ {Γ Δ A} → Γ →ʳ Δ → Γ ⊢ᵛ A → Δ ⊢ᵛ A
   renameᵉ : ∀ {Γ Δ A} → Γ →ʳ Δ → Γ ⊢ᵉ A → Δ ⊢ᵉ A
   renameᵛ ρ (ƛ N of ℓ)           = ƛ renameᵉ (ext ρ) N of ℓ
-  renameᵛ ρ (`true ℓ)            = `true ℓ
-  renameᵛ ρ (`false ℓ)           = `false ℓ
+  renameᵛ ρ ($ b of ℓ)      = $ b of ℓ
   renameᵉ ρ (` x)                =  ` ρ x
   renameᵉ ρ (val v)              =  val (renameᵛ ρ v)
   renameᵉ ρ (L · M)              =  renameᵉ ρ L · renameᵉ ρ M
@@ -203,8 +195,7 @@ module IFC (𝑳 : LabelLattice) where
   substᵛ : ∀ {Γ Δ A} → Γ →ˢ Δ → Γ ⊢ᵛ A → Δ ⊢ᵛ A
   substᵉ : ∀ {Γ Δ A} → Γ →ˢ Δ → Γ ⊢ᵉ A → Δ ⊢ᵉ A
   substᵛ σ (ƛ N of ℓ)           = ƛ substᵉ (exts σ) N of ℓ
-  substᵛ σ (`true ℓ)            = `true ℓ
-  substᵛ σ (`false ℓ)           = `false ℓ
+  substᵛ σ ($ b of ℓ)      = $ b of ℓ
   substᵉ σ (` x)                = σ x
   substᵉ σ (val v)              = val (substᵛ σ v)
   substᵉ σ (L · M)              = substᵉ σ L · substᵉ σ M
@@ -224,6 +215,12 @@ module IFC (𝑳 : LabelLattice) where
   _[_] : ∀ {Γ A B} → Γ , A ⊢ᵉ B → Γ ⊢ᵉ A → Γ ⊢ᵉ B
   N [ M ] =  substᵉ (σ₀ M) N
 
+  infix 1 _⟦∧⟧_ _⟦∨⟧_
+
+  _⟦∧⟧_ _⟦∨⟧_ : ∀ {ℓ₁ ℓ₂} → ∅ ⊢ᵛ `𝔹 of ℓ₁ → ∅ ⊢ᵛ `𝔹 of ℓ₂ → ∅ ⊢ᵛ `𝔹 of _
+  ($ b₁ of ℓ₁) ⟦∧⟧ ($ b₂ of ℓ₂) = $ (b₁ ∧ b₂) of (ℓ₁ ⊔ ℓ₂)
+  ($ b₁ of ℓ₁) ⟦∨⟧ ($ b₂ of ℓ₂) = $ (b₁ ∨ b₂) of (ℓ₁ ⊔ ℓ₂)
+
   infix 0 _⇓_
 
   data _⇓_ : ∀ {A} → ∅ ⊢ᵉ A → ∅ ⊢ᵛ A → Set where
@@ -232,22 +229,26 @@ module IFC (𝑳 : LabelLattice) where
         ---------------------------
       → val V ⇓ V
 
-   -- ⇓-∧ : ∀ {ℓₘ ℓₙ Vₘ Vₙ} {M : ∅ ⊢ᵉ `𝔹 of ℓₘ} {N : ∅ ⊢ᵉ `𝔹 of ℓₙ}
-   --     → M ⇓ Vₘ
-   --     → N ⇓ Vₙ
-   --       ------------------------
-   --     → (M `∧ N) ⇓ (Vₘ ⟦∧⟧ Vₙ)
+    ⇓-∧ : ∀ {ℓ₁ ℓ₂ V W}
+             {M : ∅ ⊢ᵉ `𝔹 of ℓ₁}
+             {N : ∅ ⊢ᵉ `𝔹 of ℓ₂}
+       → M ⇓ V
+       → N ⇓ W
+         ------------------------
+       → M `∧ N ⇓ V ⟦∧⟧ W
 
-   -- ⇓-∨ : ∀ {ℓₘ ℓₙ Vₘ Vₙ} {M : ∅ ⊢ᵉ `𝔹 of ℓₘ} {N : ∅ ⊢ᵉ `𝔹 of ℓₙ}
-   --     → M ⇓ Vₘ
-   --     → N ⇓ Vₙ
-   --       ------------------------
-   --     → (M `∨ N) ⇓ (Vₘ ⟦∨⟧ Vₙ)
+    ⇓-∨ : ∀ {ℓ₁ ℓ₂ V W}
+             {M : ∅ ⊢ᵉ `𝔹 of ℓ₁}
+             {N : ∅ ⊢ᵉ `𝔹 of ℓ₂}
+       → M ⇓ V
+       → N ⇓ W
+         ------------------------
+       → M `∨ N ⇓ V ⟦∨⟧ W
 
     ⇓-if-then : ∀ {T ℓₗ ℓ₂ V}
                    {L   : ∅ ⊢ᵉ `𝔹 of ℓₗ}
                    {M N : ∅ ⊢ᵉ T of (ℓ₂ ⊔ ℓₗ)}
-      → L ⇓ `true ℓₗ
+      → L ⇓ $ true of ℓₗ
       → M ⇓ V
         ---------------------------------------------
       → if L then M else N ⇓ V
@@ -255,7 +256,7 @@ module IFC (𝑳 : LabelLattice) where
     ⇓-if-else : ∀ {T ℓₗ ℓ₂ V}
                    {L   : ∅ ⊢ᵉ `𝔹 of ℓₗ}
                    {M N : ∅ ⊢ᵉ T of (ℓ₂ ⊔ ℓₗ)}
-      → L ⇓ `false ℓₗ
+      → L ⇓ $ false of ℓₗ
       → N ⇓ V
         ---------------------------------------------
       → if L then M else N ⇓ V
