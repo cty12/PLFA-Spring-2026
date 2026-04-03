@@ -337,25 +337,29 @@ module IFC (𝑳 : LabelLattice) where
   stamp-val-assoc (ƛ N of ℓ) {ℓ₁} {ℓ₂} rewrite ⊔-assoc {ℓ} {ℓ₁} {ℓ₂} = refl
   {-# REWRITE stamp-val-assoc #-}
 
+  private
+    cong≈ : ∀ {T ℓ₁ ℓ₂ ζ} {V W : ∅ ⊢ᵛ T of ℓ₁} {V′ W′ : ∅ ⊢ᵛ T of ℓ₂}
+      → (ℓ₁=ℓ₂ : ℓ₁ ≡ ℓ₂)
+      → V ≡ subst (λ □ → ∅ ⊢ᵛ T of □) (sym ℓ₁=ℓ₂) V′
+      → W ≡ subst (λ □ → ∅ ⊢ᵛ T of □) (sym ℓ₁=ℓ₂) W′
+        ------------------------------------------------------
+      → (T of ℓ₁ ⦂ V ≈ᵛ⦅ ζ ⦆ W) ≡ (T of ℓ₂ ⦂ V′ ≈ᵛ⦅ ζ ⦆ W′)
+    cong≈ refl refl refl = refl
+
   stamp-pres : ∀ {T ℓ ζ} {V W : ∅ ⊢ᵛ T of ℓ}
     → (ℓ′ : ℒ)
     → T of ℓ ⦂ V ≈ᵛ⦅ ζ ⦆ W
     → T of (ℓ ⊔ ℓ′) ⦂ stamp-val V ℓ′ ≈ᵛ⦅ ζ ⦆ stamp-val W ℓ′
   stamp-pres {T = `𝔹} {ℓ} {V = V} {W = W} ℓ′ V≈W =
     λ ℓ⊔ℓ′⊑ζ → cong (λ X → stamp-val X ℓ′) (V≈W (⊑-trans ⊔-upper₁ ℓ⊔ℓ′⊑ζ))
-  stamp-pres {T = (T₁ of ℓ₁) ⇒ (T₂ of ℓ₂)} {ζ = ζ} {V = ƛ N₁ of ℓ₃} {ƛ N₂ of .ℓ₃} ℓ₄ V≈W ℓ⊔ℓ′⊑ζ {V′} {W′} V′≈W′
-    p₁ p₂ with p₁ | p₂
-  ... | ⇓-app {V = V₁} ⇓-val ⇓-val N₁[V′]⇓V₁ | ⇓-app {V = W₁} ⇓-val ⇓-val N₂[W′]⇓W₁ =
-    assoc≈
-      (stamp-pres ℓ₄
-        (V≈W (⊑-trans ⊔-upper₁ ℓ⊔ℓ′⊑ζ) V′≈W′
-          (⇓-app ⇓-val ⇓-val N₁[V′]⇓V₁)
-          (⇓-app ⇓-val ⇓-val N₂[W′]⇓W₁)))
-    where
-      assoc≈ :
-          T₂ of ((ℓ₂ ⊔ ℓ₃) ⊔ ℓ₄) ⦂ stamp-val V₁ (ℓ₃ ⊔ ℓ₄) ≈ᵛ⦅ ζ ⦆ stamp-val W₁ (ℓ₃ ⊔ ℓ₄)
-        → T₂ of (ℓ₂ ⊔ (ℓ₃ ⊔ ℓ₄)) ⦂ stamp-val V₁ (ℓ₃ ⊔ ℓ₄) ≈ᵛ⦅ ζ ⦆ stamp-val W₁ (ℓ₃ ⊔ ℓ₄)
-      assoc≈ = subst (λ □ → T₂ of □ ⦂ stamp-val V₁ (ℓ₃ ⊔ ℓ₄) ≈ᵛ⦅ ζ ⦆ stamp-val W₁ (ℓ₃ ⊔ ℓ₄)) ⊔-assoc
+  stamp-pres {T = (T₁ of ℓ₁) ⇒ (T₂ of ℓ₂)} {V = ƛ N₁ of ℓ₃} {ƛ N₂ of .ℓ₃} ℓ₄ V≈W ℓ⊔ℓ′⊑ζ {V′} {W′} V′≈W′
+    (⇓-app ⇓-val ⇓-val N₁[V′]⇓V₁)
+    (⇓-app ⇓-val ⇓-val N₂[W′]⇓W₁) =
+      subst (λ □ → □) (cong≈ ⊔-assoc refl refl)
+        (stamp-pres ℓ₄
+          (V≈W (⊑-trans ⊔-upper₁ ℓ⊔ℓ′⊑ζ) V′≈W′
+            (⇓-app ⇓-val ⇓-val N₁[V′]⇓V₁)
+            (⇓-app ⇓-val ⇓-val N₂[W′]⇓W₁)))
 
   fundamental : ∀ {Γ T ℓ ζ} {σ₁ σ₂ : Γ →ˢ ∅}
     → (M : Γ ⊢ᵉ T of ℓ)
