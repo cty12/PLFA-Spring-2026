@@ -3,6 +3,7 @@ open import Relation.Nullary using (Dec)
 open import Data.Bool using (Bool; true; false; _∧_; _∨_)
 
 
+-- | The security lattice is a join semilattice with a bottom element (⊥ₗ)
 record LabelLattice : Set₁ where
 
   infix 4  _⊑_
@@ -52,13 +53,16 @@ module IFC (𝑳 : LabelLattice) where
 
   data Type : Set; data SecType : Set
 
+  -- | Plain types
   data Type where
     `𝔹   : Type
     _⇒_ : SecType → SecType → Type
 
+  -- | Security types
   data SecType where
     _of_ : Type → ℒ → SecType
 
+  -- | Typing context is standard
   data Context : Set where
     ∅   : Context
     _,_ : Context → SecType → Context
@@ -74,11 +78,11 @@ module IFC (𝑳 : LabelLattice) where
         ------------
       → Γ , B ∋ A
 
-
-  -- label stamping on types
+  -- | Label stamping on types
   stamp : SecType → ℒ → SecType
   stamp (T of ℓ₁) ℓ₂ = T of (ℓ₁ ⊔ ℓ₂)
 
+  -- | Subtyping
   data _<:ₜ_ : Type → Type → Set
   data _<:ₛ_ : SecType → SecType → Set
 
@@ -100,11 +104,10 @@ module IFC (𝑳 : LabelLattice) where
           ---------------------------
         → (S of ℓ₁) <:ₛ (T of ℓ₂)
 
-
+  -- | Typing rules
   data _⊢ᵛ_ : Context → SecType → Set
   data _⊢ᵉ_ : Context → SecType → Set
 
-  -- values
   data _⊢ᵛ_ where
 
     $_of_ : ∀ {Γ}
@@ -113,7 +116,6 @@ module IFC (𝑳 : LabelLattice) where
         ------------------- (Tv-Bool)
       → Γ ⊢ᵛ `𝔹 of ℓ
 
-    -- FUN:
     ƛ_of_  : ∀ {Γ A B}
       → (Γ , A) ⊢ᵉ B
       → (ℓ : ℒ)
@@ -124,7 +126,6 @@ module IFC (𝑳 : LabelLattice) where
   stamp-val ($ b of ℓ₁) ℓ₂ = $ b of (ℓ₁ ⊔ ℓ₂)
   stamp-val (ƛ N of ℓ₁) ℓ₂ = ƛ N of (ℓ₁ ⊔ ℓ₂)
 
-  -- intrinsically-typed terms inhibit a typing judgement
   data _⊢ᵉ_ where
 
     `_ : ∀ {Γ A}
@@ -168,6 +169,7 @@ module IFC (𝑳 : LabelLattice) where
         --------------- (T-Subsumption)
       → Γ ⊢ᵉ B
 
+  -- | Substitution
   _→ʳ_ _→ˢ_ : Context → Context → Set
   Γ →ʳ Δ = ∀ {X} → Γ ∋ X → Δ ∋ X
   Γ →ˢ Δ = ∀ {X} → Γ ∋ X → Δ ⊢ᵉ X
@@ -215,6 +217,8 @@ module IFC (𝑳 : LabelLattice) where
   _[_] : ∀ {Γ A B} → Γ , A ⊢ᵉ B → Γ ⊢ᵉ A → Γ ⊢ᵉ B
   N [ M ] =  substᵉ (σ₀ M) N
 
+
+  -- | Big-step operational semantics
   infix 1 _⟦∧⟧_ _⟦∨⟧_
 
   _⟦∧⟧_ _⟦∨⟧_ : ∀ {ℓ₁ ℓ₂} → ∅ ⊢ᵛ `𝔹 of ℓ₁ → ∅ ⊢ᵛ `𝔹 of ℓ₂ → ∅ ⊢ᵛ `𝔹 of _
@@ -269,3 +273,20 @@ module IFC (𝑳 : LabelLattice) where
        → N [ val W ] ⇓ V
          ------------------------------------------
        → L · M ⇓ stamp-val V ℓ₃
+
+  -- | Logical relations
+  infix 0 _of_⦂_≈ᵛ⦅_⦆_ _of_⦂_≈ᵉ⦅_⦆_
+
+  _of_⦂_≈ᵛ⦅_⦆_ : ∀ T ℓ → ∅ ⊢ᵛ T of ℓ → ℒ → ∅ ⊢ᵛ T of ℓ → Set
+  _of_⦂_≈ᵉ⦅_⦆_ : ∀ T ℓ → ∅ ⊢ᵉ T of ℓ → ℒ → ∅ ⊢ᵉ T of ℓ → Set
+
+  `𝔹                     of ℓ ⦂ V ≈ᵛ⦅ ζ ⦆ W = ℓ ⊑ ζ → V ≡ W
+  (T₁ of ℓ₁ ⇒ T₂ of ℓ₂) of ℓ ⦂ V ≈ᵛ⦅ ζ ⦆ W =
+    ℓ ⊑ ζ → ∀ {V′ W′}
+          → T₁ of ℓ₁       ⦂ V′ ≈ᵛ⦅ ζ ⦆ W′
+          → T₂ of (ℓ₂ ⊔ ℓ) ⦂ (val V) · (val V′) ≈ᵉ⦅ ζ ⦆ (val W) · (val W′)
+
+  T of ℓ ⦂ M ≈ᵉ⦅ ζ ⦆ N = ∀ {V W} → M ⇓ V → N ⇓ W → T of ℓ ⦂ V ≈ᵛ⦅ ζ ⦆ W
+
+  _⊢_≈⦅_⦆_ : ∀ Γ → Γ →ˢ ∅ → ℒ → Γ →ˢ ∅ → Set
+  Γ ⊢ σ₁ ≈⦅ ζ ⦆ σ₂ = ∀ {T ℓ} x → T of ℓ ⦂ σ₁ x ≈ᵉ⦅ ζ ⦆ σ₂ x
