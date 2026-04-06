@@ -1,7 +1,7 @@
 {-# OPTIONS --rewriting #-}
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; cong₂; subst)
-open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Nullary using (Dec; yes; no; ¬_)
 open import Relation.Nullary.Negation using (contradiction)
 open import Data.Bool using (Bool; true; false; _∧_; _∨_)
 open import Function using (case_of_)
@@ -38,7 +38,7 @@ cong₃ : ∀ {A B C D : Set} {x x′ : A} {y y′ : B} {z z′ : C}
 cong₃ f refl refl refl = refl
 
 
-module IFC (𝑳 : LabelLattice) where
+module λSec (𝑳 : LabelLattice) where
 
   open LabelLattice 𝑳 public
 
@@ -479,7 +479,7 @@ module IFC (𝑳 : LabelLattice) where
        → L · M ⇓ stamp-val V ℓ₃
 
   -- | Logical relations
-  infix 0 _of_⦂_≈ᵛ⦅_⦆_ _of_⦂_≈ᵉ⦅_⦆_
+  infix 0 _of_⦂_≈ᵛ⦅_⦆_ _of_⦂_≈ᵉ⦅_⦆_ _⊢_≈⦅_⦆_
 
   _of_⦂_≈ᵛ⦅_⦆_ : ∀ T ℓ → ∅ ⊢ᵛ T of ℓ → ℒ → ∅ ⊢ᵛ T of ℓ → Set
   _of_⦂_≈ᵉ⦅_⦆_ : ∀ T ℓ → ∅ ⊢ᵉ T of ℓ → ℒ → ∅ ⊢ᵉ T of ℓ → Set
@@ -603,3 +603,66 @@ module IFC (𝑳 : LabelLattice) where
   ... | _ of _ ⇒ _ of _ =
     λ ℓ₂⊔ℓ₁⊑ζ →
       case fundamental L γ L⇓false L⇓true (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
+
+module TwoPointLattice where
+
+  data SecLabel : Set where
+    low high : SecLabel
+
+  _⊔_ : SecLabel → SecLabel → SecLabel
+  low  ⊔ ℓ    = ℓ
+  high ⊔ _    = high
+
+  _≟_ : ∀ (ℓ₁ ℓ₂ : SecLabel) → Dec (ℓ₁ ≡ ℓ₂)
+  low  ≟ low  = yes refl
+  high ≟ high = yes refl
+  low  ≟ high = no λ ()
+  high ≟ low  = no λ ()
+
+  twoPointLattice : LabelLattice
+  twoPointLattice = record
+    { ℒ           = SecLabel
+    ; ⊥ₗ          = low
+    ; _⊔_         = _⊔_
+    ; _≟ₗ_        = _≟_
+    ; ⊥ₗ-identity = λ where
+        {low}  → refl
+        {high} → refl
+    ; ⊔-assoc     = λ where
+        {low}  {low}  {low}  → refl
+        {low}  {low}  {high} → refl
+        {low}  {high} {low}  → refl
+        {low}  {high} {high} → refl
+        {high} {low}  {low}  → refl
+        {high} {low}  {high} → refl
+        {high} {high} {low}  → refl
+        {high} {high} {high} → refl
+    ; ⊔-comm      = λ where
+        {low}  {low}  → refl
+        {low}  {high} → refl
+        {high} {low}  → refl
+        {high} {high} → refl
+    ; ⊔-idem      = λ where
+        {low}  → refl
+        {high} → refl
+    }
+
+open TwoPointLattice using (twoPointLattice; high; low)
+open λSec twoPointLattice public
+
+noninterference : ∀ {T} {M : ∅ , T of high ⊢ᵉ `𝔹 of low}
+                    {V₁ V₂ : ∅ ⊢ᵛ T of high} {V₁′ V₂′ : ∅ ⊢ᵛ `𝔹 of low}
+  → M [ val V₁ ] ⇓ V₁′
+  → M [ val V₂ ] ⇓ V₂′
+    ---------------------------------
+  → V₁′ ≡ V₂′
+noninterference {T} {M} {V₁} {V₂} M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
+  fundamental M (relSub ((val V₁) • id) ((val V₂) • id) σ₀-rel)
+              M[V₁]⇓V₁′ M[V₂]⇓V₂′ ⊑-refl
+  where
+  high-rel : ∀ T′ {V W} → T′ of high ⦂ V ≈ᵛ⦅ low ⦆ W
+  high-rel `𝔹                 = λ ()
+  high-rel (_ of _ ⇒ _ of _) = λ ()
+  σ₀-rel : ∅ , T of high ⊢ (val V₁) • id ≈⦅ low ⦆ (val V₂) • id
+  σ₀-rel Z = ≈ᵛ→≈ᵉ (high-rel T)
+  σ₀-rel (S ())
