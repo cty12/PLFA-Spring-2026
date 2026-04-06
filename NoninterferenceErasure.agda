@@ -535,34 +535,14 @@ module λSec (𝑳 : LabelLattice) where
 
   mutual
 
-    eraseᵛ-visible : ∀ {Γ T ℓ} (ζ : ℒ)
-      → Γ ⊢ᵛ T of ℓ
-      → ℓ ⊑ ζ
-        ----------------
-      → ErasedTerm Γ
-    eraseᵛ-visible ζ ($ b of ℓ) _ = $ᵉ b of ℓ
-    eraseᵛ-visible {T = A ⇒ (B of ℓ′)} ζ (ƛ N of ℓ) _ = ƛᵉ (erase N ζ (ℓ′ ⊑? ζ)) of ℓ
-
-    erase-visible : ∀ {Γ T ℓ} (ζ : ℒ)
-      → Γ ⊢ᵉ T of ℓ
-      → ℓ ⊑ ζ
-        ----------------
-      → ErasedTerm Γ
-    erase-visible ζ (` x) _ = `ᵉ x
-    erase-visible ζ (val V) _ = eraseᵛ V ζ (_ ⊑? ζ)
-    erase-visible ζ (L `∧ M) _ = erase L ζ (_ ⊑? ζ) `∧ᵉ erase M ζ (_ ⊑? ζ)
-    erase-visible ζ (L `∨ M) _ = erase L ζ (_ ⊑? ζ) `∨ᵉ erase M ζ (_ ⊑? ζ)
-    erase-visible ζ (L · M) _ = erase L ζ (_ ⊑? ζ) ·ᵉ erase M ζ (_ ⊑? ζ)
-    erase-visible ζ (if L then M else N) _ = ifᵉ erase L ζ (_ ⊑? ζ) then erase M ζ (_ ⊑? ζ) else erase N ζ (_ ⊑? ζ)
-    erase-visible ζ (sub {A = T′ of ℓ′} M A<:B) _ = erase M ζ (ℓ′ ⊑? ζ)
-
     eraseᵛ : ∀ {Γ T ℓ}
       → Γ ⊢ᵛ T of ℓ
       → (ζ : ℒ)
       → Dec (ℓ ⊑ ζ)
         ----------------
       → ErasedTerm Γ
-    eraseᵛ V ζ (yes ℓ⊑ζ) = eraseᵛ-visible ζ V ℓ⊑ζ
+    eraseᵛ ($ b of ℓ) ζ (yes _) = $ᵉ b of ℓ
+    eraseᵛ {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ζ (yes _) = ƛᵉ (erase N ζ (ℓ′ ⊑? ζ)) of ℓ
     eraseᵛ V ζ (no _) = ●
 
     erase : ∀ {Γ T ℓ}
@@ -571,7 +551,13 @@ module λSec (𝑳 : LabelLattice) where
       → Dec (ℓ ⊑ ζ)
         ----------------
       → ErasedTerm Γ
-    erase M ζ (yes ℓ⊑ζ) = erase-visible ζ M ℓ⊑ζ
+    erase (` x) ζ (yes _) = `ᵉ x
+    erase (val V) ζ (yes _) = eraseᵛ V ζ (_ ⊑? ζ)
+    erase (L `∧ M) ζ (yes _) = erase L ζ (_ ⊑? ζ) `∧ᵉ erase M ζ (_ ⊑? ζ)
+    erase (L `∨ M) ζ (yes _) = erase L ζ (_ ⊑? ζ) `∨ᵉ erase M ζ (_ ⊑? ζ)
+    erase (L · M) ζ (yes _) = erase L ζ (_ ⊑? ζ) ·ᵉ erase M ζ (_ ⊑? ζ)
+    erase (if L then M else N) ζ (yes _) = ifᵉ erase L ζ (_ ⊑? ζ) then erase M ζ (_ ⊑? ζ) else erase N ζ (_ ⊑? ζ)
+    erase (sub {A = T′ of ℓ′} M A<:B) ζ (yes _) = erase M ζ (ℓ′ ⊑? ζ)
     erase M ζ (no _) = ●
 
 
@@ -713,39 +699,27 @@ module λSec (𝑳 : LabelLattice) where
         ---------------------------------
       → L ·ᵉ M ⇓ₑ ●
 
+  eraseᵛ-no : ∀ {Γ T ℓ ζ} (V : Γ ⊢ᵛ T of ℓ) (¬ℓ⊑ζ : ¬ (ℓ ⊑ ζ))
+      ------------------------------------------------------------
+    → eraseᵛ V ζ (no ¬ℓ⊑ζ) ≡ ●
+  eraseᵛ-no {T = `𝔹}             ($ b of ℓ) ¬ℓ⊑ζ = refl
+  eraseᵛ-no {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ¬ℓ⊑ζ = refl
+  {-# REWRITE eraseᵛ-no #-}
 
-  eraseᵛ-value : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ) → ErasedValue (eraseᵛ V ζ (ℓ ⊑? ζ))
-  eraseᵛ-value ($ b of ℓ) ζ with ℓ ⊑? ζ
-  ... | yes _ = V-$ᵉ
-  ... | no _ = V-●
-  eraseᵛ-value {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ζ with ℓ ⊑? ζ
-  ... | yes _ = V-ƛᵉ
-  ... | no _ = V-●
-
-  eraseᵛ-bool-visible : ∀ {b ℓ ζ}
-    → ℓ ⊑ ζ
-    → eraseᵛ ($ b of ℓ) ζ (ℓ ⊑? ζ) ≡ $ᵉ_of_ {Γ = ∅} b ℓ
-  eraseᵛ-bool-visible {ℓ = ℓ} {ζ = ζ} ℓ⊑ζ with ℓ ⊑? ζ
-  ... | yes _ = refl
-  ... | no ¬ℓ⊑ζ = contradiction ℓ⊑ζ ¬ℓ⊑ζ
-
-  eraseᵛ-lam-visible : ∀ {A B ℓ ℓ′ ζ} {N : ∅ , A ⊢ᵉ B of ℓ′}
-    → ℓ ⊑ ζ
-    → eraseᵛ (ƛ N of ℓ) ζ (ℓ ⊑? ζ) ≡ ƛᵉ_of_ {Γ = ∅} (erase N ζ (ℓ′ ⊑? ζ)) ℓ
-  eraseᵛ-lam-visible {ℓ = ℓ} {ζ = ζ} ℓ⊑ζ with ℓ ⊑? ζ
-  ... | yes _ = refl
-  ... | no ¬ℓ⊑ζ = contradiction ℓ⊑ζ ¬ℓ⊑ζ
-
-  eraseᵛ-visible-eq : ∀ {Γ T ℓ ζ} (V : Γ ⊢ᵛ T of ℓ)
-    → (ℓ⊑ζ : ℓ ⊑ ζ)
-    → eraseᵛ V ζ (ℓ ⊑? ζ) ≡ eraseᵛ-visible ζ V ℓ⊑ζ
-  eraseᵛ-visible-eq {ℓ = ℓ} {ζ = ζ} V ℓ⊑ζ with ℓ ⊑? ζ
-  ... | yes _ = refl
-  ... | no ¬ℓ⊑ζ = contradiction ℓ⊑ζ ¬ℓ⊑ζ
+  erase-val : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
+      ---------------------------------------------------
+    → erase (val V) ζ (ℓ ⊑? ζ) ≡ eraseᵛ V ζ (ℓ ⊑? ζ)
+  erase-val ($ b of ℓ) ζ with ℓ ⊑? ζ in eq
+  ... | yes _ rewrite eq = refl
+  ... | no _ = refl
+  erase-val (ƛ N of ℓ) ζ with ℓ ⊑? ζ in eq
+  ... | yes _ rewrite eq = refl
+  ... | no _ = refl
+  {-# REWRITE erase-val #-}
 
   eraseᵛ-stamp-visible : ∀ {T ℓ₁ ζ} (V : ∅ ⊢ᵛ T of ℓ₁) (ℓ₂ : ℒ)
     → (ℓ₁ ⊔ ℓ₂) ⊑ ζ
-    → eraseᵛ (stamp-val V ℓ₂) ζ ((ℓ₁ ⊔ ℓ₂) ⊑? ζ) ≡ stampₑ (eraseᵛ V ζ (ℓ₁ ⊑? ζ)) ℓ₂
+    → eraseᵛ (stamp-val V ℓ₂) ζ (ℓ₁ ⊔ ℓ₂ ⊑? ζ) ≡ stampₑ (eraseᵛ V ζ (ℓ₁ ⊑? ζ)) ℓ₂
   eraseᵛ-stamp-visible {ζ = ζ} ($ b of ℓ₁) ℓ₂ vis with (ℓ₁ ⊔ ℓ₂) ⊑? ζ | ℓ₁ ⊑? ζ
   ... | yes _ | yes _ = refl
   ... | yes _ | no ¬ℓ₁⊑ζ = contradiction (⊑-trans ⊔-upper₁ vis) ¬ℓ₁⊑ζ
@@ -755,124 +729,96 @@ module λSec (𝑳 : LabelLattice) where
   ... | yes _ | no ¬ℓ₁⊑ζ = contradiction (⊑-trans ⊔-upper₁ vis) ¬ℓ₁⊑ζ
   ... | no ¬ℓ₁⊔ℓ₂⊑ζ | _ = contradiction vis ¬ℓ₁⊔ℓ₂⊑ζ
 
-  eraseᵛ-visible-stamp : ∀ {T ℓ₁ ζ} (V : ∅ ⊢ᵛ T of ℓ₁) (ℓ₂ : ℒ)
-    → (vis : (ℓ₁ ⊔ ℓ₂) ⊑ ζ)
-    → eraseᵛ-visible ζ (stamp-val V ℓ₂) vis ≡ stampₑ (eraseᵛ V ζ (ℓ₁ ⊑? ζ)) ℓ₂
-  eraseᵛ-visible-stamp V ℓ₂ vis =
-    trans (sym (eraseᵛ-visible-eq (stamp-val V ℓ₂) vis))
-          (eraseᵛ-stamp-visible V ℓ₂ vis)
-
-  erase-val : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
-    → erase (val V) ζ (ℓ ⊑? ζ) ≡ eraseᵛ V ζ (ℓ ⊑? ζ)
-  erase-val {ℓ = ℓ} V ζ with ℓ ⊑? ζ in eq
-  ... | yes _ rewrite eq = refl
-  ... | no _ = refl
+  eraseᵛ-value : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
+    → ErasedValue (eraseᵛ V ζ (ℓ ⊑? ζ))
+  eraseᵛ-value ($ b of ℓ) ζ with ℓ ⊑? ζ
+  ... | yes _ = V-$ᵉ
+  ... | no _ = V-●
+  eraseᵛ-value {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ζ with ℓ ⊑? ζ
+  ... | yes _ = V-ƛᵉ
+  ... | no _ = V-●
 
   postulate
     erase-[] : ∀ {S T ℓ₁ ℓ₂} {N : ∅ , S of ℓ₁ ⊢ᵉ T of ℓ₂} {V : ∅ ⊢ᵛ S of ℓ₁} {ζ}
       → erase (N [ val V ]) ζ (ℓ₂ ⊑? ζ) ≡ (erase N ζ (ℓ₂ ⊑? ζ) [ eraseᵛ V ζ (ℓ₁ ⊑? ζ) ]ₑ)
 
-  sim-val : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
-    → erase (val V) ζ (ℓ ⊑? ζ) ⇓ₑ eraseᵛ V ζ (ℓ ⊑? ζ)
-  sim-val V ζ rewrite erase-val V ζ = ⇓ₑ-val (eraseᵛ-value V ζ)
-
   mutual
 
-    sim-visible : ∀ {T ℓ ζ} {M : ∅ ⊢ᵉ T of ℓ} {V : ∅ ⊢ᵛ T of ℓ}
-      → M ⇓ V
-      → (ℓ⊑ζ : ℓ ⊑ ζ)
-        ----------------
-      → erase M ζ (ℓ ⊑? ζ) ⇓ₑ eraseᵛ-visible ζ V ℓ⊑ζ
-    sim-visible {ζ = ζ} {V = V} M⇓V ℓ⊑ζ
-      rewrite sym (eraseᵛ-visible-eq V ℓ⊑ζ)
-      = sim M⇓V
+    eraseᵛ-bool-visible : ∀ {b ℓ ζ}
+      → ℓ ⊑ ζ
+      → eraseᵛ ($ b of ℓ) ζ (ℓ ⊑? ζ) ≡ $ᵉ_of_ {Γ = ∅} b ℓ
+    eraseᵛ-bool-visible {ℓ = ℓ} {ζ = ζ} ℓ⊑ζ with ℓ ⊑? ζ
+    ... | yes _   = refl
+    ... | no ¬ℓ⊑ζ = contradiction ℓ⊑ζ ¬ℓ⊑ζ
 
-    sim-bool-visible : ∀ {ζ ℓ b} {M : ∅ ⊢ᵉ `𝔹 of ℓ}
+    sim-bool-visible : ∀ {b ℓ ζ} {M : ∅ ⊢ᵉ `𝔹 of ℓ}
       → M ⇓ ($ b of ℓ)
       → (ℓ⊑ζ : ℓ ⊑ ζ)
-        ----------------
-      → erase M ζ (ℓ ⊑? ζ) ⇓ₑ $ᵉ_of_ {Γ = ∅} b ℓ
-    sim-bool-visible {ℓ = ℓ} {b = b} M⇓V ℓ⊑ζ
-      rewrite sym (eraseᵛ-bool-visible {b = b} {ℓ = ℓ} ℓ⊑ζ)
-      = sim M⇓V
+        ---------------------------------------------
+      → erase M ζ (ℓ ⊑? ζ) ⇓ₑ $ᵉ b of ℓ
+    sim-bool-visible {b} {ℓ} M⇓V ℓ⊑ζ
+      rewrite sym (eraseᵛ-bool-visible {b} {ℓ} ℓ⊑ζ) = sim M⇓V
 
-    sim-lam-visible : ∀ {A B ℓ ℓ′ ζ} {M : ∅ ⊢ᵉ (A ⇒ (B of ℓ′)) of ℓ} {N : ∅ , A ⊢ᵉ B of ℓ′}
-      → M ⇓ (ƛ N of ℓ)
-      → (ℓ⊑ζ : ℓ ⊑ ζ)
-        ----------------
-      → erase M ζ (ℓ ⊑? ζ) ⇓ₑ ƛᵉ_of_ {Γ = ∅} (erase N ζ (ℓ′ ⊑? ζ)) ℓ
-    sim-lam-visible {A = A} {B = B} {ℓ = ℓ} {ℓ′ = ℓ′} {N = N} M⇓V ℓ⊑ζ
-      rewrite sym (eraseᵛ-lam-visible {A = A} {B = B} {ℓ = ℓ} {ℓ′ = ℓ′} {N = N} ℓ⊑ζ)
-      = sim {V = ƛ N of ℓ} M⇓V
+    eraseᵛ-lam-visible : ∀ {A B ℓ ℓ′ ζ} {N : ∅ , A ⊢ᵉ B of ℓ′}
+      → ℓ ⊑ ζ
+      → eraseᵛ (ƛ N of ℓ) ζ (ℓ ⊑? ζ) ≡ ƛᵉ_of_ {Γ = ∅} (erase N ζ (ℓ′ ⊑? ζ)) ℓ
+    eraseᵛ-lam-visible {ℓ = ℓ} {ζ = ζ} ℓ⊑ζ with ℓ ⊑? ζ
+    ... | yes _   = refl
+    ... | no ¬ℓ⊑ζ = contradiction ℓ⊑ζ ¬ℓ⊑ζ
+
+    sim-lam-visible : ∀ {A B ℓ ℓ′ ζ} {M : ∅ ⊢ᵉ (A ⇒ B of ℓ′) of ℓ} {N}
+      → M ⇓ ƛ N of ℓ
+      → ℓ ⊑ ζ
+        ---------------------------------------------------------
+      → erase M ζ (ℓ ⊑? ζ) ⇓ₑ ƛᵉ (erase N ζ (ℓ′ ⊑? ζ)) of ℓ
+    sim-lam-visible {A} {B} {ℓ} {ℓ′} {N = N} M⇓V ℓ⊑ζ
+      rewrite sym (eraseᵛ-lam-visible {A} {B} {ℓ} {ℓ′} {N = N} ℓ⊑ζ) = sim M⇓V
 
     sim : ∀ {T ℓ ζ} {M : ∅ ⊢ᵉ T of ℓ} {V : ∅ ⊢ᵛ T of ℓ}
       → M ⇓ V
       ----------------------------------------------------------------------------------
       → erase M ζ (ℓ ⊑? ζ) ⇓ₑ eraseᵛ V ζ (ℓ ⊑? ζ)
-    sim {ζ = ζ} (⇓-val {V = V}) = sim-val V ζ
+    sim {ζ = ζ} (⇓-val {V = V}) = ⇓ₑ-val (eraseᵛ-value V ζ)
 
-    sim {ζ = ζ} (⇓-∧ {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} {V = $ b₁ of .ℓ₁} {W = $ b₂ of .ℓ₂} {M = M} {N = N} M⇓V N⇓W) =
-      go ((ℓ₁ ⊔ ℓ₂) ⊑? ζ)
-      where
-      go : (w : Dec ((ℓ₁ ⊔ ℓ₂) ⊑ ζ))
-        → erase (M `∧ N) ζ w
-          ⇓ₑ
-          eraseᵛ (($ b₁ of ℓ₁) ⟦∧⟧ ($ b₂ of ℓ₂)) ζ w
-      go (no ¬vis) = ⇓ₑ-val {V = ● {Γ = ∅}} V-●
-      go (yes vis) =
-        ⇓ₑ-∧ (sim-bool-visible M⇓V (⊑-trans ⊔-upper₁ vis))
-              (sim-bool-visible N⇓W (⊑-trans ⊔-upper₂ vis))
+    sim {ζ = ζ} (⇓-∧ {V = $ b₁ of ℓ₁} {W = $ b₂ of ℓ₂} M⇓V N⇓W)
+      with ℓ₁ ⊔ ℓ₂ ⊑? ζ
+    ... | no ¬vis = ⇓ₑ-val V-●
+    ... | yes vis = ⇓ₑ-∧ (sim-bool-visible M⇓V (⊑-trans ⊔-upper₁ vis))
+                         (sim-bool-visible N⇓W (⊑-trans ⊔-upper₂ vis))
 
-    sim {ζ = ζ} (⇓-∨ {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} {V = $ b₁ of .ℓ₁} {W = $ b₂ of .ℓ₂} {M = M} {N = N} M⇓V N⇓W) =
-      go ((ℓ₁ ⊔ ℓ₂) ⊑? ζ)
-      where
-      go : (w : Dec ((ℓ₁ ⊔ ℓ₂) ⊑ ζ))
-        → erase (M `∨ N) ζ w
-          ⇓ₑ
-          eraseᵛ (($ b₁ of ℓ₁) ⟦∨⟧ ($ b₂ of ℓ₂)) ζ w
-      go (no ¬vis) = ⇓ₑ-val {V = ● {Γ = ∅}} V-●
-      go (yes vis) =
-        ⇓ₑ-∨ (sim-bool-visible M⇓V (⊑-trans ⊔-upper₁ vis))
-             (sim-bool-visible N⇓W (⊑-trans ⊔-upper₂ vis))
+    sim {ζ = ζ} (⇓-∨ {V = $ b₁ of ℓ₁} {W = $ b₂ of ℓ₂} M⇓V N⇓W)
+      with ℓ₁ ⊔ ℓ₂ ⊑? ζ
+    ... | no ¬vis = ⇓ₑ-val V-●
+    ... | yes vis = ⇓ₑ-∨ (sim-bool-visible M⇓V (⊑-trans ⊔-upper₁ vis))
+                         (sim-bool-visible N⇓W (⊑-trans ⊔-upper₂ vis))
 
-    sim {ζ = ζ} (⇓-if-then {ℓₗ = ℓₗ} {ℓ₂ = ℓ₂} {V = V} {L = L} {M = M} {N = N} L⇓true M⇓V) =
-      go ((ℓ₂ ⊔ ℓₗ) ⊑? ζ)
-      where
-      go : (w : Dec ((ℓ₂ ⊔ ℓₗ) ⊑ ζ))
-        → erase (if_then_else_ L M N) ζ w
-          ⇓ₑ
-          eraseᵛ V ζ w
-      go (no ¬vis) = ⇓ₑ-val {V = ● {Γ = ∅}} V-●
-      go (yes vis) =
-        ⇓ₑ-if-then (sim-bool-visible L⇓true (⊑-trans ⊔-upper₂ vis))
-                   (sim-visible M⇓V vis)
+    sim {ζ = ζ} (⇓-if-then {ℓₗ = ℓₗ} {ℓ₂} {V = V} {M = M} L⇓true M⇓V)
+      with ℓ₂ ⊔ ℓₗ ⊑? ζ in eq
+    ... | no ¬vis = ⇓ₑ-val V-●
+    ... | yes vis
+      = ⇓ₑ-if-then (sim-bool-visible L⇓true (⊑-trans ⊔-upper₂ vis))
+                   (subst (λ □ → erase M ζ (ℓ₂ ⊔ ℓₗ ⊑? ζ) ⇓ₑ eraseᵛ V ζ □) eq
+                          (sim M⇓V))
 
-    sim {ζ = ζ} (⇓-if-else {ℓₗ = ℓₗ} {ℓ₂ = ℓ₂} {V = V} {L = L} {M = M} {N = N} L⇓false N⇓V) =
-      go ((ℓ₂ ⊔ ℓₗ) ⊑? ζ)
-      where
-      go : (w : Dec ((ℓ₂ ⊔ ℓₗ) ⊑ ζ))
-        → erase (if_then_else_ L M N) ζ w
-          ⇓ₑ
-          eraseᵛ V ζ w
-      go (no ¬vis) = ⇓ₑ-val {V = ● {Γ = ∅}} V-●
-      go (yes vis) =
-        ⇓ₑ-if-else (sim-bool-visible L⇓false (⊑-trans ⊔-upper₂ vis))
-                   (sim-visible N⇓V vis)
+    sim {ζ = ζ} (⇓-if-else {ℓₗ = ℓₗ} {ℓ₂} {V = V} {N = N} L⇓false N⇓V)
+      with ℓ₂ ⊔ ℓₗ ⊑? ζ in eq
+    ... | no ¬vis = ⇓ₑ-val V-●
+    ... | yes vis
+      = ⇓ₑ-if-else (sim-bool-visible L⇓false (⊑-trans ⊔-upper₂ vis))
+                    (subst (λ □ → erase N ζ (ℓ₂ ⊔ ℓₗ ⊑? ζ) ⇓ₑ eraseᵛ V ζ □) eq
+                           (sim N⇓V))
 
-    sim {ζ = ζ} (⇓-app {ℓ₂ = ℓ₂} {ℓ₃ = ℓ₃} {W = W} {V = V} {N = N} {L = L} {M = M} L⇓ƛ M⇓W N[W]⇓V) =
-      go ((ℓ₂ ⊔ ℓ₃) ⊑? ζ)
+    sim {ζ = ζ} (⇓-app {ℓ₂ = ℓ₂} {ℓ₃ = ℓ₃} {W = W} {V = V} {N = N} {L = L} {M = M} L⇓ƛ M⇓W N[W]⇓V)
+      with ℓ₂ ⊔ ℓ₃ ⊑? ζ in eq
+    ... | no ¬vis = ⇓ₑ-val V-●
+    ... | yes vis = subst
+        (λ □ → erase (_·_ L M) ζ (yes vis) ⇓ₑ □)
+        (sym (subst
+          (λ w → eraseᵛ (stamp-val V ℓ₃) ζ w ≡ stampₑ (eraseᵛ V ζ (ℓ₂ ⊑? ζ)) ℓ₃)
+          eq
+          (eraseᵛ-stamp-visible V ℓ₃ vis)))
+        (⇓ₑ-app (sim-lam-visible L⇓ƛ (⊑-trans ⊔-upper₂ vis))
+                 (sim M⇓W) body)
       where
-      go : (w : Dec ((ℓ₂ ⊔ ℓ₃) ⊑ ζ))
-        → erase (_·_ L M) ζ w ⇓ₑ eraseᵛ (stamp-val V ℓ₃) ζ w
-      go (no ¬vis) = ⇓ₑ-val {V = ● {Γ = ∅}} V-●
-      go (yes vis) =
-        subst
-          (λ X → erase (_·_ L M) ζ (yes vis) ⇓ₑ X)
-          (sym (eraseᵛ-visible-stamp V ℓ₃ vis))
-          (⇓ₑ-app {W = eraseᵛ V ζ (_ ⊑? ζ)} {ℓ = ℓ₃}
-                  (sim-lam-visible L⇓ƛ (⊑-trans ⊔-upper₂ vis))
-                  (sim M⇓W)
-                  body)
-        where
-        body : erase N ζ (_ ⊑? ζ) [ eraseᵛ W ζ (_ ⊑? ζ) ]ₑ ⇓ₑ eraseᵛ V ζ (_ ⊑? ζ)
-        body rewrite sym (erase-[] {N = N} {V = W} {ζ = ζ}) = sim N[W]⇓V
+      body : erase N ζ (_ ⊑? ζ) [ eraseᵛ W ζ (_ ⊑? ζ) ]ₑ ⇓ₑ eraseᵛ V ζ (_ ⊑? ζ)
+      body rewrite sym (erase-[] {N = N} {V = W} {ζ = ζ}) = sim N[W]⇓V
