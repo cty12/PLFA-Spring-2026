@@ -498,13 +498,26 @@ module IFC (𝑳 : LabelLattice) where
   _⊢_≈⦅_⦆_ : ∀ Γ → Γ →ˢ ∅ → ℒ → Γ →ˢ ∅ → Set
   Γ ⊢ σ₁ ≈⦅ ζ ⦆ σ₂ = ∀ {T ℓ} x → T of ℓ ⦂ σ₁ x ≈ᵉ⦅ ζ ⦆ σ₂ x
 
-  ≈-• : ∀ {Γ T ℓ ζ} {σ₁ σ₂ : Γ →ˢ ∅} {M N : ∅ ⊢ᵉ T of ℓ}
-    → Γ ⊢ σ₁ ≈⦅ ζ ⦆ σ₂
+  record RelSub (Γ : Context) (ζ : ℒ) : Set where
+    constructor relSub
+    field
+      σ₁ : Γ →ˢ ∅
+      σ₂ : Γ →ˢ ∅
+      σ≈ : Γ ⊢ σ₁ ≈⦅ ζ ⦆ σ₂
+
+  open RelSub public
+
+  extendRelSub : ∀ {Γ T ℓ ζ} {M N : ∅ ⊢ᵉ T of ℓ}
+    → RelSub Γ ζ
     → T of ℓ ⦂ M ≈ᵉ⦅ ζ ⦆ N
       ---------------------------------------------
-    → (Γ , T of ℓ) ⊢ (M • σ₁) ≈⦅ ζ ⦆ (N • σ₂)
-  ≈-• σ₁≈σ₂ M≈N Z     = M≈N
-  ≈-• σ₁≈σ₂ M≈N (S x) = σ₁≈σ₂ x
+    → RelSub (Γ , T of ℓ) ζ
+  extendRelSub {Γ = Γ} {T} {ℓ} {ζ} {M} {N} γ M≈N =
+    relSub (M • γ .σ₁) (N • γ .σ₂) σ≈-•
+    where
+    σ≈-• : (Γ , T of ℓ) ⊢ (M • γ .σ₁) ≈⦅ ζ ⦆ (N • γ .σ₂)
+    σ≈-• Z     = M≈N
+    σ≈-• (S x) = σ≈ γ x
 
   stamp-val-assoc : ∀ {Γ T ℓ} (V : Γ ⊢ᵛ T of ℓ) {ℓ₁ ℓ₂}
       →                                    stamp-val (stamp-val V ℓ₁) ℓ₂   ≡
@@ -537,57 +550,56 @@ module IFC (𝑳 : LabelLattice) where
                                 (⇓-app ⇓-val ⇓-val N₁[V′]⇓V₁)
                                 (⇓-app ⇓-val ⇓-val N₂[W′]⇓W₁)))
 
-  fundamental : ∀ {Γ T ℓ ζ} {σ₁ σ₂ : Γ →ˢ ∅}
+  fundamental : ∀ {Γ T ℓ ζ}
     → (M : Γ ⊢ᵉ T of ℓ)
-    → Γ ⊢ σ₁ ≈⦅ ζ ⦆ σ₂
-      ------------------------------------------------
-    → T of ℓ ⦂ (substᵉ σ₁ M) ≈ᵉ⦅ ζ ⦆ (substᵉ σ₂ M)
-  fundamental (` x) σ₁≈σ₂ = σ₁≈σ₂ x
-  fundamental (val ($ b of ℓ)) σ₁≈σ₂ ⇓-val ⇓-val _ = refl
-  fundamental {T = (T₁ of ℓ₁) ⇒ (T₂ of ℓ₂)} {σ₁ = σ₁} {σ₂ = σ₂}
-    (val (ƛ N of ℓ)) σ₁≈σ₂ ⇓-val ⇓-val ℓ⊑ζ {V′} {W′} V′≈W′
+    → (γ : RelSub Γ ζ)
+      ------------------------------------------------------------
+    → T of ℓ ⦂ (substᵉ (γ .σ₁) M) ≈ᵉ⦅ ζ ⦆ (substᵉ (γ .σ₂) M)
+  fundamental (` x) γ = (γ .σ≈) x
+  fundamental (val ($ b of ℓ)) γ ⇓-val ⇓-val _ = refl
+  fundamental {T = (T₁ of ℓ₁) ⇒ (T₂ of ℓ₂)}
+    (val (ƛ N of ℓ)) γ ⇓-val ⇓-val ℓ⊑ζ {V′} {W′} V′≈W′
     (⇓-app {V = V₁} ⇓-val ⇓-val N[V′]⇓V₁)
     (⇓-app {V = W₁} ⇓-val ⇓-val N[W′]⇓W₁) =
-      stamp-pres-≈ ℓ (fundamental {σ₁ = (val V′) • σ₁} {σ₂ = (val W′) • σ₂} N
-                                  (≈-• σ₁≈σ₂ (≈ᵛ→≈ᵉ V′≈W′)) N[V′]⇓V₁ N[W′]⇓W₁)
-  fundamental {σ₁ = σ₁} {σ₂} (_`∧_ M N) σ₁≈σ₂
+      stamp-pres-≈ ℓ (fundamental N (extendRelSub γ (≈ᵛ→≈ᵉ V′≈W′)) N[V′]⇓V₁ N[W′]⇓W₁)
+  fundamental (_`∧_ M N) γ
     (⇓-∧ M⇓V₁ N⇓W₁) (⇓-∧ M⇓V₂ N⇓W₂) ℓ₁⊔ℓ₂⊑ζ =
-      cong₂ _⟦∧⟧_ (fundamental {σ₁ = σ₁} {σ₂} M σ₁≈σ₂ M⇓V₁ M⇓V₂ (⊑-trans ⊔-upper₁ ℓ₁⊔ℓ₂⊑ζ))
-                  (fundamental {σ₁ = σ₁} {σ₂} N σ₁≈σ₂ N⇓W₁ N⇓W₂ (⊑-trans ⊔-upper₂ ℓ₁⊔ℓ₂⊑ζ))
-  fundamental {σ₁ = σ₁} {σ₂ = σ₂} (_`∨_ {ℓ₁ = ℓ₁} {ℓ₂} M N) σ₁≈σ₂
+      cong₂ _⟦∧⟧_ (fundamental M γ M⇓V₁ M⇓V₂ (⊑-trans ⊔-upper₁ ℓ₁⊔ℓ₂⊑ζ))
+                  (fundamental N γ N⇓W₁ N⇓W₂ (⊑-trans ⊔-upper₂ ℓ₁⊔ℓ₂⊑ζ))
+  fundamental (_`∨_ {ℓ₁ = ℓ₁} {ℓ₂} M N) γ
     (⇓-∨ M⇓V₁ N⇓W₁) (⇓-∨ M⇓V₂ N⇓W₂) ℓ₁⊔ℓ₂⊑ζ =
-      cong₂ _⟦∨⟧_ (fundamental {σ₁ = σ₁} {σ₂ = σ₂} M σ₁≈σ₂ M⇓V₁ M⇓V₂ (⊑-trans ⊔-upper₁ ℓ₁⊔ℓ₂⊑ζ))
-                  (fundamental {σ₁ = σ₁} {σ₂ = σ₂} N σ₁≈σ₂ N⇓W₁ N⇓W₂ (⊑-trans ⊔-upper₂ ℓ₁⊔ℓ₂⊑ζ))
-  fundamental {ζ = ζ} {σ₁} {σ₂} (_·_ {T = T} {ℓ₃ = ℓ₃} L M) σ₁≈σ₂
+      cong₂ _⟦∨⟧_ (fundamental M γ M⇓V₁ M⇓V₂ (⊑-trans ⊔-upper₁ ℓ₁⊔ℓ₂⊑ζ))
+                  (fundamental N γ N⇓W₁ N⇓W₂ (⊑-trans ⊔-upper₂ ℓ₁⊔ℓ₂⊑ζ))
+  fundamental {ζ = ζ} (_·_ {T = T} {ℓ₃ = ℓ₃} L M) γ
     (⇓-app L⇓₁ M⇓₁ N[V]⇓V₁) (⇓-app L⇓₂ M⇓₂ N[W]⇓W₁)
     with ℓ₃ ⊑? ζ
   ... | yes ℓ₃⊑ζ =
-    fundamental {σ₁ = σ₁} {σ₂} L σ₁≈σ₂ L⇓₁ L⇓₂ ℓ₃⊑ζ
-      (fundamental {σ₁ = σ₁} {σ₂} M σ₁≈σ₂ M⇓₁ M⇓₂)
+    fundamental L γ L⇓₁ L⇓₂ ℓ₃⊑ζ
+      (fundamental M γ M⇓₁ M⇓₂)
       (⇓-app ⇓-val ⇓-val N[V]⇓V₁) (⇓-app ⇓-val ⇓-val N[W]⇓W₁)
   ... | no ¬ℓ₃⊑ζ with T  -- we can see nothing regardless of the type
   ...   | `𝔹               = λ ℓ₂⊔ℓ₃⊑ζ → contradiction (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₃⊑ζ) ¬ℓ₃⊑ζ
   ...   | _ of _ ⇒ _ of _ = λ ℓ₂⊔ℓ₃⊑ζ → contradiction (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₃⊑ζ) ¬ℓ₃⊑ζ
-  fundamental {σ₁ = σ₁} {σ₂ = σ₂} (if_then_else_ {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} L M N) σ₁≈σ₂
+  fundamental (if_then_else_ {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} L M N) γ
     (⇓-if-then L⇓true M⇓V₁) (⇓-if-then L⇓true′ M⇓V₂) =
-      fundamental {σ₁ = σ₁} {σ₂ = σ₂} M σ₁≈σ₂ M⇓V₁ M⇓V₂
-  fundamental {σ₁ = σ₁} {σ₂ = σ₂} (if_then_else_ {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} L M N) σ₁≈σ₂
+      fundamental M γ M⇓V₁ M⇓V₂
+  fundamental (if_then_else_ {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} L M N) γ
     (⇓-if-else L⇓false N⇓W₁) (⇓-if-else L⇓false′ N⇓W₂) =
-      fundamental {σ₁ = σ₁} {σ₂ = σ₂} N σ₁≈σ₂ N⇓W₁ N⇓W₂
+      fundamental N γ N⇓W₁ N⇓W₂
   -- impossible cases
-  fundamental {σ₁ = σ₁} {σ₂} (if_then_else_ {T = T} L M N) σ₁≈σ₂
+  fundamental (if_then_else_ {T = T} L M N) γ
     (⇓-if-then L⇓true M⇓V₁) (⇓-if-else L⇓false N⇓W₂) with T
   ... | `𝔹 =
     λ ℓ₂⊔ℓ₁⊑ζ →
-      case fundamental {σ₁ = σ₁} {σ₂} L σ₁≈σ₂ L⇓true L⇓false (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
+      case fundamental L γ L⇓true L⇓false (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
   ... | _ of _ ⇒ _ of _ =
     λ ℓ₂⊔ℓ₁⊑ζ →
-      case fundamental {σ₁ = σ₁} {σ₂} L σ₁≈σ₂ L⇓true L⇓false (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
-  fundamental {σ₁ = σ₁} {σ₂} (if_then_else_ {T = T} L M N) σ₁≈σ₂
+      case fundamental L γ L⇓true L⇓false (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
+  fundamental (if_then_else_ {T = T} L M N) γ
     (⇓-if-else L⇓false N⇓W₁) (⇓-if-then L⇓true M⇓V₂) with T
   ... | `𝔹 =
     λ ℓ₂⊔ℓ₁⊑ζ →
-      case fundamental {σ₁ = σ₁} {σ₂} L σ₁≈σ₂ L⇓false L⇓true (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
+      case fundamental L γ L⇓false L⇓true (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
   ... | _ of _ ⇒ _ of _ =
     λ ℓ₂⊔ℓ₁⊑ζ →
-      case fundamental {σ₁ = σ₁} {σ₂} L σ₁≈σ₂ L⇓false L⇓true (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
+      case fundamental L γ L⇓false L⇓true (⊑-trans ⊔-upper₂ ℓ₂⊔ℓ₁⊑ζ) of λ ()
