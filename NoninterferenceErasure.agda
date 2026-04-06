@@ -300,30 +300,6 @@ module λSec (𝑳 : LabelLattice) where
     (S x) → refl
   {-# REWRITE sub-dist #-}
 
-  subst-congᵛ : ∀ {Γ Δ A} {σ τ : Γ →ˢ Δ}
-      → (∀ {B} (x : Γ ∋ B) → σ x ≡ τ x)
-      → (V : Γ ⊢ᵛ A)
-      → substᵛ σ V ≡ substᵛ τ V
-  subst-congᵉ : ∀ {Γ Δ A} {σ τ : Γ →ˢ Δ}
-      → (∀ {B} (x : Γ ∋ B) → σ x ≡ τ x)
-      → (M : Γ ⊢ᵉ A)
-      → substᵉ σ M ≡ substᵉ τ M
-  subst-congᵛ {σ = σ} {τ} σ=τ (ƛ N of ℓ) =
-    cong (λ N′ → ƛ N′ of ℓ) (subst-congᵉ exts[σ]=exts[τ] N)
-    where
-    exts[σ]=exts[τ] : ∀ {A} (x : _ ∋ A) → exts σ x ≡ exts τ x
-    exts[σ]=exts[τ] Z     = refl
-    exts[σ]=exts[τ] (S x) = cong (renameᵉ S_) (σ=τ x)
-  subst-congᵛ σ=τ ($ b of ℓ) = refl
-  subst-congᵉ σ=τ (` x) = σ=τ x
-  subst-congᵉ σ=τ (val V) = cong val_ (subst-congᵛ σ=τ V)
-  subst-congᵉ σ=τ (L · M) = cong₂ _·_ (subst-congᵉ σ=τ L) (subst-congᵉ σ=τ M)
-  subst-congᵉ σ=τ (if L then M else N) =
-    cong₃ if_then_else_ (subst-congᵉ σ=τ L) (subst-congᵉ σ=τ M) (subst-congᵉ σ=τ N)
-  subst-congᵉ σ=τ (M `∧ N) = cong₂ _`∧_ (subst-congᵉ σ=τ M) (subst-congᵉ σ=τ N)
-  subst-congᵉ σ=τ (M `∨ N) = cong₂ _`∨_ (subst-congᵉ σ=τ M) (subst-congᵉ σ=τ N)
-  subst-congᵉ σ=τ (sub M A<:B) = cong (λ M′ → sub M′ A<:B) (subst-congᵉ σ=τ M)
-
   exts-ren : ∀ {Γ Δ A B} (ρ : Γ →ʳ Δ)
     → ((` Z) • ⇑ (ren ρ)) {B} ≡ ren ((Z {A = A}) •ʳ ⇑ʳ ρ)
   exts-ren ρ = extensionality λ where
@@ -611,6 +587,24 @@ module λSec (𝑳 : LabelLattice) where
   renameₑ ρ (L ·ᵉ M) = renameₑ ρ L ·ᵉ renameₑ ρ M
   renameₑ ρ (ifᵉ L then M else N) = ifᵉ renameₑ ρ L then renameₑ ρ M else renameₑ ρ N
 
+  renameₑ-cong : ∀ {Γ Δ} {ρ τ : Γ →ʳₑ Δ}
+      → (∀ {A} (x : Γ ∋ A) → ρ x ≡ τ x)
+      → (M : ErasedTerm Γ)
+      → renameₑ ρ M ≡ renameₑ τ M
+  renameₑ-cong ρ=τ ● = refl
+  renameₑ-cong ρ=τ (`ᵉ x) = cong `ᵉ_ (ρ=τ x)
+  renameₑ-cong ρ=τ ($ᵉ b of ℓ) = refl
+  renameₑ-cong {ρ = ρ} {τ} ρ=τ (ƛᵉ N of ℓ) =
+    cong (ƛᵉ_of ℓ)
+         (renameₑ-cong (λ where
+                         Z     → refl
+                         (S x) → cong S_ (ρ=τ x)) N)
+  renameₑ-cong ρ=τ (L `∧ᵉ M) = cong₂ _`∧ᵉ_ (renameₑ-cong ρ=τ L) (renameₑ-cong ρ=τ M)
+  renameₑ-cong ρ=τ (L `∨ᵉ M) = cong₂ _`∨ᵉ_ (renameₑ-cong ρ=τ L) (renameₑ-cong ρ=τ M)
+  renameₑ-cong ρ=τ (L ·ᵉ M) = cong₂ _·ᵉ_ (renameₑ-cong ρ=τ L) (renameₑ-cong ρ=τ M)
+  renameₑ-cong ρ=τ (ifᵉ L then M else N) =
+    cong₃ ifᵉ_then_else_ (renameₑ-cong ρ=τ L) (renameₑ-cong ρ=τ M) (renameₑ-cong ρ=τ N)
+
   idₑ : ∀ {Γ} → Γ →ˢₑ Γ
   idₑ x = `ᵉ x
 
@@ -706,7 +700,7 @@ module λSec (𝑳 : LabelLattice) where
   eraseᵛ-no {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ¬ℓ⊑ζ = refl
   {-# REWRITE eraseᵛ-no #-}
 
-  erase-val : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
+  erase-val : ∀ {Γ T ℓ} (V : Γ ⊢ᵛ T of ℓ) (ζ : ℒ)
       ---------------------------------------------------
     → erase (val V) ζ (ℓ ⊑? ζ) ≡ eraseᵛ V ζ (ℓ ⊑? ζ)
   erase-val ($ b of ℓ) ζ with ℓ ⊑? ζ in eq
@@ -716,6 +710,121 @@ module λSec (𝑳 : LabelLattice) where
   ... | yes _ rewrite eq = refl
   ... | no _ = refl
   {-# REWRITE erase-val #-}
+
+  mutual
+
+    erase-renameᵛ : ∀ {Γ Δ T ℓ} (ρ : Γ →ʳ Δ) (V : Γ ⊢ᵛ T of ℓ) (ζ : ℒ)
+        -------------------------------------------------------------------
+      → eraseᵛ (renameᵛ ρ V) ζ (ℓ ⊑? ζ) ≡ renameₑ ρ (eraseᵛ V ζ (ℓ ⊑? ζ))
+    erase-renameᵛ ρ ($ b of ℓ) ζ with ℓ ⊑? ζ
+    ... | yes _ = refl
+    ... | no _ = refl
+    erase-renameᵛ {T = A ⇒ (B of ℓ′)} ρ (ƛ N of ℓ) ζ with ℓ ⊑? ζ
+    ... | yes _ =
+      cong (λ M → ƛᵉ M of ℓ)
+           (trans (erase-renameᵉ (ext ρ) N ζ)
+                  (renameₑ-cong (λ where
+                    Z     → refl
+                    (S x) → refl)
+                    (erase N ζ (ℓ′ ⊑? ζ))))
+    ... | no _ = refl
+
+    erase-renameᵉ : ∀ {Γ Δ T ℓ} (ρ : Γ →ʳ Δ) (M : Γ ⊢ᵉ T of ℓ) (ζ : ℒ)
+        -------------------------------------------------------------------
+      → erase (renameᵉ ρ M) ζ (ℓ ⊑? ζ) ≡ renameₑ ρ (erase M ζ (ℓ ⊑? ζ))
+    erase-renameᵉ {ℓ = ℓ} ρ (` x) ζ with ℓ ⊑? ζ
+    ... | yes _ = refl
+    ... | no _ = refl
+    erase-renameᵉ ρ (val V) ζ = erase-renameᵛ ρ V ζ
+    erase-renameᵉ {ℓ = ℓ} ρ (L · M) ζ with ℓ ⊑? ζ
+    ... | yes _ = cong₂ _·ᵉ_ (erase-renameᵉ ρ L ζ) (erase-renameᵉ ρ M ζ)
+    ... | no _ = refl
+    erase-renameᵉ {ℓ = ℓ} ρ (if L then M else N) ζ with ℓ ⊑? ζ
+    ... | yes _ = cong₃ ifᵉ_then_else_ (erase-renameᵉ ρ L ζ) (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
+    ... | no _ = refl
+    erase-renameᵉ {ℓ = ℓ} ρ (M `∧ N) ζ with ℓ ⊑? ζ
+    ... | yes _ = cong₂ _`∧ᵉ_ (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
+    ... | no _ = refl
+    erase-renameᵉ {ℓ = ℓ} ρ (M `∨ N) ζ with ℓ ⊑? ζ
+    ... | yes _ = cong₂ _`∨ᵉ_ (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
+    ... | no _ = refl
+    erase-renameᵉ {T = T₂} {ℓ = ℓ₂} ρ (sub {A = T₁ of ℓ₁} M A<:B) ζ with ℓ₂ ⊑? ζ
+    ... | yes _ = erase-renameᵉ {T = T₁} {ℓ = ℓ₁} ρ M ζ
+    ... | no _ = refl
+
+  SubErase : ∀ {Γ Δ} → Γ →ˢ Δ → Γ →ˢₑ Δ → ℒ → Set
+  SubErase {Γ} σ τ ζ = ∀ {T ℓ} (x : Γ ∋ (T of ℓ))
+      → erase (σ x) ζ (ℓ ⊑? ζ) ≡ substₑ τ (erase (` x) ζ (ℓ ⊑? ζ))
+
+  erase-exts-Z : ∀ {Γ Δ T ℓ} {τ : Γ →ˢₑ Δ} (ζ : ℒ)
+      -------------------------------------------------------------------
+    → erase (` Z {A = T of ℓ}) ζ (ℓ ⊑? ζ)
+      ≡ substₑ (extsₑ {A = T of ℓ} τ) (erase (` Z) ζ (ℓ ⊑? ζ))
+  erase-exts-Z {ℓ = ℓ} ζ with ℓ ⊑? ζ
+  ... | yes _ = refl
+  ... | no _ = refl
+
+  erase-exts-S : ∀ {Γ Δ A T ℓ} {τ : Γ →ˢₑ Δ} (x : Γ ∋ T of ℓ) (ζ : ℒ)
+      -------------------------------------------------------------------
+    → renameₑ (S_ {B = A}) (substₑ τ (erase (` x) ζ (ℓ ⊑? ζ)))
+      ≡ substₑ (extsₑ {A = A} τ) (erase (` (S x)) ζ (ℓ ⊑? ζ))
+  erase-exts-S {ℓ = ℓ} x ζ with ℓ ⊑? ζ
+  ... | yes _ = refl
+  ... | no _ = refl
+
+  ext-SubErase : ∀ {Γ Δ A} {σ : Γ →ˢ Δ} {τ : Γ →ˢₑ Δ} {ζ}
+      -------------------------------------------------------------------
+    → SubErase σ τ ζ
+    → SubErase (exts {A = A} σ) (extsₑ {A = A} τ) ζ
+  ext-SubErase {A = T of ℓ} {σ = σ} {τ = τ} {ζ = ζ} σ≈τ Z = erase-exts-Z {τ = τ} ζ
+  ext-SubErase {A = A} {σ = σ} {τ = τ} {ζ = ζ} σ≈τ (S x) =
+    trans (erase-renameᵉ (S_ {B = A}) (σ x) ζ)
+          (trans (cong (renameₑ S_) (σ≈τ x))
+                 (erase-exts-S {A = A} {τ = τ} x ζ))
+
+  mutual
+
+    erase-substᵛ : ∀ {Γ Δ T ℓ} (σ : Γ →ˢ Δ) (τ : Γ →ˢₑ Δ) (ζ : ℒ)
+      → SubErase σ τ ζ
+      → (V : Γ ⊢ᵛ T of ℓ)
+        -------------------------------------------------------------------
+      → eraseᵛ (substᵛ σ V) ζ (ℓ ⊑? ζ) ≡ substₑ τ (eraseᵛ V ζ (ℓ ⊑? ζ))
+    erase-substᵛ σ τ ζ σ≈τ ($ b of ℓ) with ℓ ⊑? ζ
+    ... | yes _ = refl
+    ... | no _ = refl
+    erase-substᵛ {T = A ⇒ (B of ℓ′)} σ τ ζ σ≈τ (ƛ N of ℓ) with ℓ ⊑? ζ
+    ... | yes _ =
+      cong (λ M → ƛᵉ M of ℓ)
+           (erase-substᵉ (exts {A = A} σ) (extsₑ {A = A} τ) ζ
+                         (ext-SubErase {A = A} {σ = σ} {τ = τ} {ζ = ζ} σ≈τ)
+                         N)
+    ... | no _ = refl
+
+    erase-substᵉ : ∀ {Γ Δ T ℓ} (σ : Γ →ˢ Δ) (τ : Γ →ˢₑ Δ) (ζ : ℒ)
+      → SubErase σ τ ζ
+      → (M : Γ ⊢ᵉ T of ℓ)
+        -------------------------------------------------------------------
+      → erase (substᵉ σ M) ζ (ℓ ⊑? ζ) ≡ substₑ τ (erase M ζ (ℓ ⊑? ζ))
+    erase-substᵉ σ τ ζ σ≈τ (` x) = σ≈τ x
+    erase-substᵉ σ τ ζ σ≈τ (val V) = erase-substᵛ σ τ ζ σ≈τ V
+    erase-substᵉ {ℓ = ℓ} σ τ ζ σ≈τ (L · M) with ℓ ⊑? ζ
+    ... | yes _ = cong₂ _·ᵉ_ (erase-substᵉ σ τ ζ σ≈τ L) (erase-substᵉ σ τ ζ σ≈τ M)
+    ... | no _ = refl
+    erase-substᵉ {ℓ = ℓ} σ τ ζ σ≈τ (if L then M else N) with ℓ ⊑? ζ
+    ... | yes _ =
+      cong₃ ifᵉ_then_else_ (erase-substᵉ σ τ ζ σ≈τ L)
+                           (erase-substᵉ σ τ ζ σ≈τ M)
+                           (erase-substᵉ σ τ ζ σ≈τ N)
+    ... | no _ = refl
+    erase-substᵉ {ℓ = ℓ} σ τ ζ σ≈τ (M `∧ N) with ℓ ⊑? ζ
+    ... | yes _ = cong₂ _`∧ᵉ_ (erase-substᵉ σ τ ζ σ≈τ M) (erase-substᵉ σ τ ζ σ≈τ N)
+    ... | no _ = refl
+    erase-substᵉ {ℓ = ℓ} σ τ ζ σ≈τ (M `∨ N) with ℓ ⊑? ζ
+    ... | yes _ = cong₂ _`∨ᵉ_ (erase-substᵉ σ τ ζ σ≈τ M) (erase-substᵉ σ τ ζ σ≈τ N)
+    ... | no _ = refl
+    erase-substᵉ {T = T₂} {ℓ = ℓ₂} σ τ ζ σ≈τ (sub {A = T₁ of ℓ₁} M A<:B) with ℓ₂ ⊑? ζ
+    ... | yes _ = erase-substᵉ {T = T₁} {ℓ = ℓ₁} σ τ ζ σ≈τ M
+    ... | no _ = refl
 
   eraseᵛ-stamp-visible : ∀ {T ℓ₁ ζ} (V : ∅ ⊢ᵛ T of ℓ₁) (ℓ₂ : ℒ)
     → (ℓ₁ ⊔ ℓ₂) ⊑ ζ
@@ -738,9 +847,21 @@ module λSec (𝑳 : LabelLattice) where
   ... | yes _ = V-ƛᵉ
   ... | no _ = V-●
 
-  postulate
-    erase-[] : ∀ {S T ℓ₁ ℓ₂} {N : ∅ , S of ℓ₁ ⊢ᵉ T of ℓ₂} {V : ∅ ⊢ᵛ S of ℓ₁} {ζ}
-      → erase (N [ val V ]) ζ (ℓ₂ ⊑? ζ) ≡ (erase N ζ (ℓ₂ ⊑? ζ) [ eraseᵛ V ζ (ℓ₁ ⊑? ζ) ]ₑ)
+  erase-[] : ∀ {S T ℓ₁ ℓ₂} {N : ∅ , S of ℓ₁ ⊢ᵉ T of ℓ₂} {V : ∅ ⊢ᵛ S of ℓ₁} {ζ}
+      -----------------------------------------------------------------------------------------
+    → erase (N [ val V ]) ζ (ℓ₂ ⊑? ζ) ≡ (erase N ζ (ℓ₂ ⊑? ζ) [ eraseᵛ V ζ (ℓ₁ ⊑? ζ) ]ₑ)
+  erase-[] {ℓ₁ = ℓ₁} {N = N} {V = V} {ζ = ζ} =
+    erase-substᵉ σ τ ζ σ≈τ N
+    where
+    σ = (val V) • id
+
+    τ = eraseᵛ V ζ (ℓ₁ ⊑? ζ) •ₑ idₑ
+
+    σ≈τ : SubErase σ τ ζ
+    σ≈τ {ℓ = .ℓ₁} Z with ℓ₁ ⊑? ζ in eq
+    ... | yes _ rewrite eq | erase-val V ζ = refl
+    ... | no ¬ℓ₁⊑ζ rewrite erase-val V ζ | eraseᵛ-no V ¬ℓ₁⊑ζ = refl
+    σ≈τ (S ())
 
   mutual
 
