@@ -209,10 +209,10 @@ Ideas for project language features:
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
 |          | 24  | [SystemF, Universal Types](./SystemFIntrinsic.lagda.md) (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) | [link](./SystemFIntrinsic.lagda.md) [old notes (ABT)](./SystemF.lagda.md) |
-|          | 26  | [Gradual Typing](./lecture-notes-GradualTypingCoercions.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)|  [link](./lecture-notes-GradualTypingCoercions.lagda.md) [old notes (ABT)](./SystemF.lagda.md) |
+|          | 26  | [Gradual Typing](./lecture-notes-GradualTypingCoercions.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)|  [link](./lecture-notes-GradualTypingCoercions.lagda.md) [old notes (ABT)](./lecture-notes-GradualTyping.lagda.md) |
 |          | 31  | [Gradual Guarantee for GTLC](./gradual-guarantee.md) |
 |          |  2  | [Gradual Guarantee for GTLC](./gradual-guarantee.md), cont'd |
-| April    |  7  | Information-flow Control and Noninterference |
+| April    |  7  | [Information-flow Control and Noninterference](./lecture-notes-IFC.lagda.md) | [link](./lecture-notes-IFC.lagda.md) |
 |          |  9  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
 |          | 14  | [Compositional](https://plfa.github.io/Compositional/)  |
 |          | 16  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
