@@ -1,3 +1,12 @@
+# Learning Goals
+
++ Programming language-based information-flow control
+  using a static type system
++ The statement of the main security guarantee,
+  namely noninterference
++ A case study of the proof techniques we've learned:
+  logical relations and simulation
+
 # Explicit and Implicit Information Flows
 
 ```text
@@ -110,6 +119,19 @@ If M [ V₁ ] ⇓ V₁′ and M [ V₂ ] ⇓ V₂′ then V₁′ = V₂′.
 ```
 
 (Look at `LambdaSec/Noninterference`)
+
+Following Zdancewic's dissertation, we prove noninterference as
+a corollary of the fundamental theorem of security logical relations.
+
+(Look at `LambdaSec/LogicalRelations`)
+
+Following Li and Zdancewic 2010, we can also prove noninterference
+using the erasure-and-simulation approach. The key idea is to erase
+high-security values to opaque (`●`). The simulation relation
+is defined using the `erase` function: λSEC term `M` is in sync with
+the erased term `Mₑ` if `erase M ζ = Mₑ`.
+
+(Look at `LambdaSec/Erasure`)
 
 # The Agda Mechanization
 
