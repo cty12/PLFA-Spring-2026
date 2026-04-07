@@ -114,6 +114,16 @@ data ErasedValue : ∀ {Γ} → ErasedTerm Γ → Set where
       ---------------------
     → ErasedValue {Γ} (ƛᵉ N of ℓ)
 
+eraseᵛ-value : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
+    ------------------------------------------------
+  → ErasedValue (eraseᵛ V ζ (ℓ ⊑? ζ))
+eraseᵛ-value ($ b of ℓ) ζ with ℓ ⊑? ζ
+... | yes _ = V-$ᵉ
+... | no _ = V-●
+eraseᵛ-value {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ζ with ℓ ⊑? ζ
+... | yes _ = V-ƛᵉ
+... | no _ = V-●
+
 stampₑ : ∀ {Γ} → ErasedTerm Γ → ℒ → ErasedTerm Γ
 stampₑ ●          ℓ = ●
 stampₑ ($ᵉ b of ℓ₁) ℓ₂ = $ᵉ b of (ℓ₁ ⊔ ℓ₂)
@@ -276,31 +286,30 @@ data _⇓ₑ_ : ErasedTerm ∅ → ErasedTerm ∅ → Set where
       ---------------------------------
     → L ·ᵉ M ⇓ₑ ●
 
-mutual
-
-  erase-renameᵛ : ∀ {Γ Δ T ℓ} (ρ : Γ →ʳ Δ) (V : Γ ⊢ᵛ T of ℓ) (ζ : ℒ)
+erase-renameᵛ : ∀ {Γ Δ T ℓ} (ρ : Γ →ʳ Δ) (V : Γ ⊢ᵛ T of ℓ) (ζ : ℒ)
       ---------------------------------------------------------------------
     → eraseᵛ (renameᵛ ρ V) ζ (ℓ ⊑? ζ) ≡ renameₑ ρ (eraseᵛ V ζ (ℓ ⊑? ζ))
-  erase-renameᵛ ρ ($ b of ℓ) ζ with ℓ ⊑? ζ
-  ... | yes _ = refl
-  ... | no _ = refl
-  erase-renameᵛ {T = A ⇒ (B of ℓ′)} ρ (ƛ N of ℓ) ζ with ℓ ⊑? ζ
-  ... | yes _ = cong (ƛᵉ_of ℓ) (erase-renameᵉ (ext ρ) N ζ)
-  ... | no _ = refl
 
-  erase-renameᵉ : ∀ {Γ Δ T ℓ} (ρ : Γ →ʳ Δ) (M : Γ ⊢ᵉ T of ℓ) (ζ : ℒ)
+erase-renameᵉ : ∀ {Γ Δ T ℓ} (ρ : Γ →ʳ Δ) (M : Γ ⊢ᵉ T of ℓ) (ζ : ℒ)
       ---------------------------------------------------------------------
     → erase (renameᵉ ρ M) ζ (ℓ ⊑? ζ) ≡ renameₑ ρ (erase M ζ (ℓ ⊑? ζ))
-  erase-renameᵉ ρ (` x) ζ = refl
-  erase-renameᵉ ρ (val V) ζ = erase-renameᵛ ρ V ζ
-  erase-renameᵉ ρ (L · M) ζ = cong₂ _·ᵉ_ (erase-renameᵉ ρ L ζ) (erase-renameᵉ ρ M ζ)
-  erase-renameᵉ ρ (if L then M else N) ζ =
+
+erase-renameᵛ ρ ($ b of ℓ) ζ with ℓ ⊑? ζ
+... | yes _ = refl
+... | no _ = refl
+erase-renameᵛ {T = A ⇒ (B of ℓ′)} ρ (ƛ N of ℓ) ζ with ℓ ⊑? ζ
+... | yes _ = cong (ƛᵉ_of ℓ) (erase-renameᵉ (ext ρ) N ζ)
+... | no _ = refl
+erase-renameᵉ ρ (` x) ζ = refl
+erase-renameᵉ ρ (val V) ζ = erase-renameᵛ ρ V ζ
+erase-renameᵉ ρ (L · M) ζ = cong₂ _·ᵉ_ (erase-renameᵉ ρ L ζ) (erase-renameᵉ ρ M ζ)
+erase-renameᵉ ρ (if L then M else N) ζ =
     cong₃ ifᵉ_then_else_ (erase-renameᵉ ρ L ζ) (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
-  erase-renameᵉ ρ (M `∧ N) ζ = cong₂ _`∧ᵉ_ (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
-  erase-renameᵉ ρ (M `∨ N) ζ = cong₂ _`∨ᵉ_ (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
-  erase-renameᵉ {ℓ = ℓ₂} ρ (sub {A = T₁ of ℓ₁} M A<:B) ζ with ℓ₂ ⊑? ζ
-  ... | yes _ = erase-renameᵉ ρ M ζ
-  ... | no _ = refl
+erase-renameᵉ ρ (M `∧ N) ζ = cong₂ _`∧ᵉ_ (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
+erase-renameᵉ ρ (M `∨ N) ζ = cong₂ _`∨ᵉ_ (erase-renameᵉ ρ M ζ) (erase-renameᵉ ρ N ζ)
+erase-renameᵉ {ℓ = ℓ₂} ρ (sub {A = T₁ of ℓ₁} M A<:B) ζ with ℓ₂ ⊑? ζ
+... | yes _ = erase-renameᵉ ρ M ζ
+... | no _ = refl
 
 eraseˢ-exts : ∀ {Γ Δ A B} (σ : Γ →ˢ Δ) (ζ : ℒ) (x : Γ , A ∋ B)
     ---------------------------------------------------------------
@@ -308,35 +317,33 @@ eraseˢ-exts : ∀ {Γ Δ A B} (σ : Γ →ˢ Δ) (ζ : ℒ) (x : Γ , A ∋ B)
 eraseˢ-exts {B = T of ℓ} σ ζ Z = refl
 eraseˢ-exts {B = T of ℓ} σ ζ (S x) = erase-renameᵉ S_ (σ x) ζ
 
-mutual
+erase-substᵛ : ∀ {Γ Δ T ℓ} (σ : Γ →ˢ Δ) (ζ : ℒ)
+  → (V : Γ ⊢ᵛ T of ℓ)
+    ------------------------------------------------------------------------------
+  → eraseᵛ (substᵛ σ V) ζ (ℓ ⊑? ζ) ≡ substₑ (eraseˢ σ ζ) (eraseᵛ V ζ (ℓ ⊑? ζ))
+erase-substᵉ : ∀ {Γ Δ T ℓ} (σ : Γ →ˢ Δ) (ζ : ℒ)
+  → (M : Γ ⊢ᵉ T of ℓ)
+    ---------------------------------------------------------------------------
+  → erase (substᵉ σ M) ζ (ℓ ⊑? ζ) ≡ substₑ (eraseˢ σ ζ) (erase M ζ (ℓ ⊑? ζ))
 
-  erase-substᵛ : ∀ {Γ Δ T ℓ} (σ : Γ →ˢ Δ) (ζ : ℒ)
-    → (V : Γ ⊢ᵛ T of ℓ)
-      ------------------------------------------------------------------------------
-    → eraseᵛ (substᵛ σ V) ζ (ℓ ⊑? ζ) ≡ substₑ (eraseˢ σ ζ) (eraseᵛ V ζ (ℓ ⊑? ζ))
-  erase-substᵛ σ ζ ($ b of ℓ) with ℓ ⊑? ζ
-  ... | yes _ = refl
-  ... | no _ = refl
-  erase-substᵛ {T = A ⇒ B of ℓ′} σ ζ (ƛ N of ℓ) with ℓ ⊑? ζ
-  ... | yes _ = cong (ƛᵉ_of ℓ)
-                     (trans (erase-substᵉ (exts σ) ζ N)
-                            (substₑ-cong (eraseˢ-exts σ ζ) (erase N ζ (ℓ′ ⊑? ζ))))
-  ... | no _ = refl
-
-  erase-substᵉ : ∀ {Γ Δ T ℓ} (σ : Γ →ˢ Δ) (ζ : ℒ)
-    → (M : Γ ⊢ᵉ T of ℓ)
-      ---------------------------------------------------------------------------
-    → erase (substᵉ σ M) ζ (ℓ ⊑? ζ) ≡ substₑ (eraseˢ σ ζ) (erase M ζ (ℓ ⊑? ζ))
-  erase-substᵉ σ ζ (` x) = refl
-  erase-substᵉ σ ζ (val V) = erase-substᵛ σ ζ V
-  erase-substᵉ σ ζ (L · M) = cong₂ _·ᵉ_ (erase-substᵉ σ ζ L) (erase-substᵉ σ ζ M)
-  erase-substᵉ σ ζ (if L then M else N) =
+erase-substᵛ σ ζ ($ b of ℓ) with ℓ ⊑? ζ
+... | yes _ = refl
+... | no _ = refl
+erase-substᵛ {T = A ⇒ B of ℓ′} σ ζ (ƛ N of ℓ) with ℓ ⊑? ζ
+... | yes _ = cong (ƛᵉ_of ℓ)
+                   (trans (erase-substᵉ (exts σ) ζ N)
+                          (substₑ-cong (eraseˢ-exts σ ζ) (erase N ζ (ℓ′ ⊑? ζ))))
+... | no _ = refl
+erase-substᵉ σ ζ (` x) = refl
+erase-substᵉ σ ζ (val V) = erase-substᵛ σ ζ V
+erase-substᵉ σ ζ (L · M) = cong₂ _·ᵉ_ (erase-substᵉ σ ζ L) (erase-substᵉ σ ζ M)
+erase-substᵉ σ ζ (if L then M else N) =
     cong₃ ifᵉ_then_else_ (erase-substᵉ σ ζ L) (erase-substᵉ σ ζ M) (erase-substᵉ σ ζ N)
-  erase-substᵉ σ ζ (M `∧ N) = cong₂ _`∧ᵉ_ (erase-substᵉ σ ζ M) (erase-substᵉ σ ζ N)
-  erase-substᵉ σ ζ (M `∨ N) = cong₂ _`∨ᵉ_ (erase-substᵉ σ ζ M) (erase-substᵉ σ ζ N)
-  erase-substᵉ {ℓ = ℓ₂} σ ζ (sub {A = T₁ of ℓ₁} M A<:B) with ℓ₂ ⊑? ζ
-  ... | yes _ = erase-substᵉ {ℓ = ℓ₁} σ ζ M
-  ... | no _ = refl
+erase-substᵉ σ ζ (M `∧ N) = cong₂ _`∧ᵉ_ (erase-substᵉ σ ζ M) (erase-substᵉ σ ζ N)
+erase-substᵉ σ ζ (M `∨ N) = cong₂ _`∨ᵉ_ (erase-substᵉ σ ζ M) (erase-substᵉ σ ζ N)
+erase-substᵉ {ℓ = ℓ₂} σ ζ (sub {A = T₁ of ℓ₁} M A<:B) with ℓ₂ ⊑? ζ
+... | yes _ = erase-substᵉ {ℓ = ℓ₁} σ ζ M
+... | no _ = refl
 
 eraseˢ-σ₀ : ∀ {A ℓ₁ B} (V : ∅ ⊢ᵛ A of ℓ₁) (ζ : ℒ) (x : ∅ , A of ℓ₁ ∋ B)
     ------------------------------------------------------------------------
@@ -397,15 +404,6 @@ eraseᵛ-⟦∨⟧ {ℓ₁ = ℓ₁} {ℓ₂} {ζ} with ℓ₁ ⊑? ζ | ℓ₂ 
 {-# REWRITE eraseᵛ-⟦∨⟧ #-}
 
 
-eraseᵛ-value : ∀ {T ℓ} (V : ∅ ⊢ᵛ T of ℓ) (ζ : ℒ)
-  → ErasedValue (eraseᵛ V ζ (ℓ ⊑? ζ))
-eraseᵛ-value ($ b of ℓ) ζ with ℓ ⊑? ζ
-... | yes _ = V-$ᵉ
-... | no _ = V-●
-eraseᵛ-value {T = A ⇒ (B of ℓ′)} (ƛ N of ℓ) ζ with ℓ ⊑? ζ
-... | yes _ = V-ƛᵉ
-... | no _ = V-●
-
 eraseᵛ-hidden : ∀ {Γ T ℓ ζ} (V : Γ ⊢ᵛ T of ℓ)
     → (¬ℓ⊑ζ : ¬ (ℓ ⊑ ζ))
     → eraseᵛ V ζ (no ¬ℓ⊑ζ) ≡ ●
@@ -453,7 +451,8 @@ sim {ζ = ζ} {M = L · _} (⇓-app {ℓ₂ = ℓ₂} {ℓ₃} {V = V} {N = N} L
   let L⇓ƛₑ : erase L ζ (yes ℓ₃⊑ζ) ⇓ₑ ƛᵉ (erase N ζ (_ ⊑? ζ)) of ℓ₃
       L⇓ƛₑ = subst (λ □ → erase L ζ □ ⇓ₑ eraseᵛ (ƛ N of ℓ₃) ζ □) eq
               (sim L⇓ƛ) in
-  subst (_ ⇓ₑ_) (sym (eraseᵛ-stamp-visible V ℓ₃ ℓ₃⊑ζ)) (⇓ₑ-app L⇓ƛₑ (sim M⇓W) (sim N[W]⇓V))
+  subst (_ ⇓ₑ_) (sym (eraseᵛ-stamp-visible V ℓ₃ ℓ₃⊑ζ))
+    (⇓ₑ-app L⇓ƛₑ (sim M⇓W) (sim N[W]⇓V))
 ... | no ¬ℓ₃⊑ζ with (ℓ₂ ⊔ ℓ₃) ⊑? ζ
 ...   | yes res = contradiction (⊑-trans ⊔-upper₂ res) ¬ℓ₃⊑ζ
 ...   | no _ = ⇓ₑ-app-● (subst (λ □ → erase L ζ □ ⇓ₑ eraseᵛ (ƛ N of ℓ₃) ζ □) eq (sim L⇓ƛ))
