@@ -14,9 +14,8 @@ open import LambdaSec.Erasure twoPointLattice
 
 
 -- | The main security theorem: NI
-Noninterference =
-  ∀ {T} {M : ∅ , T of high ⊢ᵉ `𝔹 of low}
-        {V₁ V₂ : ∅ ⊢ᵛ T of high} {V₁′ V₂′ : ∅ ⊢ᵛ `𝔹 of low}
+Noninterference = ∀ {M : ∅ , `𝔹 of high ⊢ᵉ `𝔹 of low}
+                    {V₁ V₂ : ∅ ⊢ᵛ `𝔹 of high} {V₁′ V₂′}
     → M [ val V₁ ] ⇓ V₁′
     → M [ val V₂ ] ⇓ V₂′
       ---------------------------------
@@ -26,22 +25,18 @@ Noninterference =
 noninterference-LR noninterference-sim : Noninterference
 
 -- | The logical relations version of the proof
-noninterference-LR {T} {M} {V₁} {V₂} M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
+noninterference-LR {M} {V₁} {V₂} M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
   fundamental M (relSub ((val V₁) • id) ((val V₂) • id) σ₀-rel)
               M[V₁]⇓V₁′ M[V₂]⇓V₂′ ⊑-refl
   where
-  σ₀-rel : ∅ , T of high ⊢ (val V₁) • id ≈⦅ low ⦆ (val V₂) • id
-  σ₀-rel Z = ≈ᵛ→≈ᵉ (high-rel T)
-    where
-    high-rel : ∀ T′ {V W} → T′ of high ⦂ V ≈ᵛ⦅ low ⦆ W
-    high-rel `𝔹                 = λ ()
-    high-rel (_ of _ ⇒ _ of _) = λ ()
+  σ₀-rel : ∅ , _ of high ⊢ (val V₁) • id ≈⦅ low ⦆ (val V₂) • id
+  σ₀-rel Z = ≈ᵛ→≈ᵉ (λ ())
 
 -- | The simulation version of the proof
-noninterference-sim {M = M} {V₁} {V₂} {V₁′ = $ b₁ of low} {V₂′ = $ b₂ of low}
+noninterference-sim {M} {V₁} {V₂} {V₁′ = $ b₁ of low} {V₂′ = $ b₂ of low}
                     M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
   let sim₁ : erase M low _ [ eraseᵛ V₁ low (high ⊑? low) ]ₑ ⇓ₑ
-               eraseᵛ ($ b₁ of low) low (low ⊑? low)
+             eraseᵛ ($ b₁ of low) low (low ⊑? low)
       sim₁ = sim M[V₁]⇓V₁′
       sim₂ = sim M[V₂]⇓V₂′ in
   case ⇓ₑ-deterministic sim₁ sim₂ of λ where

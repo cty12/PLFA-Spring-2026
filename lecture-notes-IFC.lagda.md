@@ -22,6 +22,8 @@ Implicit flow: input influences output through *branching*
 
 # Information-Flow Control
 
+Programming language-based information-flow control
+
 + Information-flow control (IFC) ensures that information transfers adhere to a security policy.
 + In our example, high input must not influence ("flow into") low output.
 + Static IFC using a type system (static analysis)
@@ -36,7 +38,18 @@ priv-input : Unit -> Bool of high
 let input = priv-input ()
 ```
 
-File structure:
+# Security Guarantee: Noninterference
+
+We model input using (single) subsitution. Output is the evaluation result.
+
+```text
+Theorem (Noninterference). Suppose Bool of high ⊢ M : Bool of low and ∅ ⊢ Vᵢ : Bool of high.
+If M [ V₁ ] ⇓ V₁′ and M [ V₂ ] ⇓ V₂′ then V₁′ = V₂′.
+```
+
+# The Agda Mechanization
+
+File structure of the LambdaSec development:
 
 - [`LambdaSec/Utils.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/Utils.agda)
   Helper lemmas
@@ -45,7 +58,7 @@ File structure:
 - [`LambdaSec/TwoPointLattice.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/TwoPointLattice.agda)
   The concrete two-point lattice with `low` and `high`.
 - [`LambdaSec/LambdaSec.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/LambdaSec.agda)
-  The IFC calculus: its syntax, type system, and big-step semantics.
+  The IFC calculus: its syntax, type system, and big-step semantics. Intrinsically-typed terms, PLFA style
 - [`LambdaSec/LogicalRelations.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/LogicalRelations.agda)
   The security logical relations and the fundamental theorem.
 - [`LambdaSec/Erasure.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/Erasure.agda)
