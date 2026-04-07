@@ -65,13 +65,42 @@ As we've said, `high ⋤ low`, so the call to `output` is ill-typed.
 
 # LambdaSec
 
-TBA
+We model the notion of "security" (or "privilege levels") by using
+a security label lattice, which is essentially a join semilattice
+with a bottom element (least restrictive, or the most public in
+the case of confidentiality, like the security of the program itself.)
+
+(Look at `LambdaSec/LabelLattice.agda`)
+
+Our LambdaSec mechanization is based on the λSEC calculus in Ch.3 of
+Steve Zdancewic's PhD dissertation (Zdancewic 2002). It is based on
+call-by-value left-to-right STLC. The type system of λSEC tracks and checks
+security labels. The operational semantics also propagates labels,
+but that's only for the proof. λSEC is a fully static IFC language,
+so the type system itself is responsible for enforcing security.
+
+(Look at `LambdaSec/LambdaSec.agda`)
+
+[Question] Why does a λ-abstraction (or a function type) carry a label?
+
+It may leak information if we branch on a secret and choose the function
+to call. Consider this:
+
+```text
+output ((if input then (λx. false) else (λx. true)) true)
+```
+
+The `T-App` rule is for this same reason (implicit flow through functions).
 
 # Security Guarantee: Noninterference
 
-The main security guarantee of LambdaSec is *noninterference*. Noninterference says that
-whatever private input a LambdaSec program takes, it always produces the same public-visible
-output.
+The main security guarantee of LambdaSec is *noninterference*.
+Noninterference says that whatever private input a LambdaSec program takes,
+it always produces the same public-visible output.
+
+We state noninterference using a two-point lattice (low and high).
+
+(Look at `LambdaSec/TwoPointLattice`)
 
 We model input using (single) subsitution. Output is the evaluation result.
 
@@ -79,6 +108,8 @@ We model input using (single) subsitution. Output is the evaluation result.
 Theorem (Noninterference). Suppose Bool of high ⊢ M : Bool of low and ∅ ⊢ Vᵢ : Bool of high.
 If M [ V₁ ] ⇓ V₁′ and M [ V₂ ] ⇓ V₂′ then V₁′ = V₂′.
 ```
+
+(Look at `LambdaSec/Noninterference`)
 
 # The Agda Mechanization
 
@@ -108,3 +139,9 @@ open import LambdaSec.Noninterference public
         ; noninterference-sim    -- proof of NI using erasure and simulation
   )
 ```
+
+# References
+
+1. Expressing Information Flow Properties. Kozyri, Chong, and Myers. 2021
+2. Programming Languages for Information Security. Zdancewic. 2002
+3. Arrows for Secure Information Flow. Li and Zdancewic. 2010
