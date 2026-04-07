@@ -131,7 +131,7 @@ high-security values to opaque (`●`). The simulation relation
 is defined using the `erase` function: λSEC term `M` is in sync with
 the erased term `Mₑ` if `erase M ζ = Mₑ`.
 
-(Look at `LambdaSec/Erasure`)
+(Look at `LambdaSec/Simulation`)
 
 # The Agda Mechanization
 
@@ -147,7 +147,7 @@ File structure of the LambdaSec development:
   The IFC calculus: its syntax, type system, and big-step semantics. Intrinsically-typed terms, PLFA style
 - [`LambdaSec/LogicalRelations.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/LogicalRelations.agda)
   The security logical relations and the fundamental theorem.
-- [`LambdaSec/Erasure.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/Erasure.agda)
+- [`LambdaSec/Simulation.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/Simulation.agda)
   LambdaSec simulates with erased LambdaSec.
 - [`LambdaSec/Noninterference.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/Noninterference.agda)
   The top-level statement of noninterference together with the two instantiations,

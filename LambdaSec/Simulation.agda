@@ -3,7 +3,7 @@
 open import LambdaSec.LabelLattice using (LabelLattice)
 open import LambdaSec.Utils using (cong₃)
 
-module LambdaSec.Erasure (𝑳 : LabelLattice) where
+module LambdaSec.Simulation (𝑳 : LabelLattice) where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; cong₂; subst)
 open import Relation.Nullary using (Dec; yes; no; ¬_)
@@ -17,7 +17,6 @@ open import Agda.Builtin.Equality.Rewrite
 open import LambdaSec.LambdaSec 𝑳 public
 
 
--- | Erasure
 infix  6 ifᵉ_then_else_
 infixl 7 _·ᵉ_
 infixl 8 _`∧ᵉ_
