@@ -4,7 +4,7 @@
 
             +-------------+
  Input ===> | Program (P) | ===> Output
-[high]      +-------------+      [low]
+ [high]     +-------------+      [low]
 
 ```
 
@@ -29,16 +29,27 @@ Programming language-based information-flow control
 + Static IFC using a type system (static analysis)
 
 Types are annotated with security labels (for example, low and high).
-Subtyping: low value can flow into a function that expects high (low ⊑ high).
+Subtyping: low value can flow into a function that expects high (`low ⊑ high`)
+but not the other way around (`high ⋤ low`).
 
 The IFC type system rejects illegal explicit flow:
 
 ```text
 priv-input : Unit -> Bool of high
-let input = priv-input ()
+output     : Bool of low -> Unit
+
+let input = priv-input () in
+  output (neg input)
 ```
 
+The program is ill-typed, because `(neg input) : Bool of high`
+but `output` expects `Bool of low`, `high ⋤ low`.
+
 # Security Guarantee: Noninterference
+
+The main security guarantee of LambdaSec is *noninterference*. Noninterference says that
+whatever private input a LambdaSec program takes, it always produces the same public-visible
+output.
 
 We model input using (single) subsitution. Output is the evaluation result.
 
