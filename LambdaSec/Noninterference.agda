@@ -22,7 +22,8 @@ Noninterference = ∀ {M : ∅ , `𝔹 of high ⊢ᵉ `𝔹 of low}
     → V₁′ ≡ V₂′
 
 -- | Two flavors of the NI proof
-noninterference-LR noninterference-sim : Noninterference
+noninterference-LR  : Noninterference
+noninterference-sim : Noninterference
 
 -- | The logical relations version of the proof
 noninterference-LR {M} {V₁} {V₂} M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
