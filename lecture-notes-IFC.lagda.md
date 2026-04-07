@@ -1,3 +1,41 @@
+# Explicit and Implicit Information Flows
+
+```text
+
+            +-------------+
+ Input ===> | Program (P) | ===> Output
+[high]      +-------------+      [low]
+
+```
+
+Suppose input is private (high-security) and output is publicly visible (low-security).
+
+Can we infer input from output (suppose `neg` is boolean negation)?
+
+```text
+P₁ = output (neg input)                      -- explicit flow
+
+P₂ = output (if input then false else true)  -- implicit flow
+```
+
+Implicit flow: input influences output through *branching*
+
+# Information-Flow Control
+
++ Information-flow control (IFC) ensures that information transfers adhere to a security policy.
++ In our example, high input must not influence ("flow into") low output.
++ Static IFC using a type system (static analysis)
+
+Types are annotated with security labels (for example, low and high).
+Subtyping: low value can flow into a function that expects high (low ⊑ high).
+
+The IFC type system rejects illegal explicit flow:
+
+```text
+priv-input : Unit -> Bool of high
+let input = priv-input ()
+```
+
 File structure:
 
 - [`LambdaSec/Utils.agda`](https://github.com/jsiek/PLFA-Spring-2026/blob/main/LambdaSec/Utils.agda)
@@ -20,4 +58,7 @@ File structure:
 {-# OPTIONS --rewriting #-}
 
 open import LambdaSec.Noninterference public
+  using ( noninterference-LR     -- proof of NI using logical relations
+        ; noninterference-sim    -- proof of NI using erasure and simulation
+  )
 ```
