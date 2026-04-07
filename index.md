@@ -203,16 +203,16 @@ Ideas for project language features:
 |          | 24 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference | [link](./lecture-notes-Bidirectional.lagda.md)
 |          | 26  | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) | [link](./lecture-notes-Subtyping.lagda.md)
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) | [link](./lecture-notes-Bisimulation.lagda.md) |
-|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](./lambda/)
+|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](https://github.com/jsiek/PLFA-Spring-2026/tree/main/lambda)
 |          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus | [link](./lambda/FullBetaConfluence.agda)
 |          | 12  | Confluence continued |
 |          | 17  | Spring Break, no class |
 |          | 19  | Spring Break, no class |
 |          | 24  | [SystemF, Universal Types](./SystemFIntrinsic.lagda.md) (aka. parametric polymorphism), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+29A+System+F+%26+Parametric+Polymorphism/1_3warcwd3) | [link](./SystemFIntrinsic.lagda.md) [old notes (ABT)](./SystemF.lagda.md) |
-|          | 26  | [Gradual Typing](./lecture-notes-GradualTypingCoercions.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)|  [link](./lecture-notes-GradualTypingCoercions.lagda.md) [old notes (ABT)](./SystemF.lagda.md) |
+|          | 26  | [Gradual Typing](./lecture-notes-GradualTypingCoercions.lagda.md), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+27A+Gradual+Typing/1_r6ockrxd)|  [link](./lecture-notes-GradualTypingCoercions.lagda.md) [old notes (ABT)](./lecture-notes-GradualTyping.lagda.md) |
 |          | 31  | [Gradual Guarantee for GTLC](./gradual-guarantee.md) |
 |          |  2  | [Gradual Guarantee for GTLC](./gradual-guarantee.md), cont'd |
-| April    |  7  | Information-flow Control and Noninterference |
+| April    |  7  | [Information-flow Control and Noninterference](./lecture-notes-IFC.lagda.md) | [link](./lecture-notes-IFC.lagda.md) |
 |          |  9  | [Denotational](https://plfa.github.io/Denotational/) semantics of the Lambda Calculus, [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+March+30%2C+Denotational+Semantics/1_da4xq013)  |
 |          | 14  | [Compositional](https://plfa.github.io/Compositional/)  |
 |          | 16  | [Soundness](https://plfa.github.io/Soundness/), [Recording](https://iu.mediaspace.kaltura.com/media/Lecture+April+6%2C+Soundness+of+reduction+with+respect+to+denotational+semantics/1_o5gwttt7) |
