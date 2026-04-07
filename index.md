@@ -203,7 +203,7 @@ Ideas for project language features:
 |          | 24 | [Inference](https://plfa.github.io/Inference/) bidirectional type inference | [link](./lecture-notes-Bidirectional.lagda.md)
 |          | 26  | [Subtyping and Records](./lecture-notes-Subtyping.lagda.md) | [link](./lecture-notes-Subtyping.lagda.md)
 |  March   | 3  | [Bisimulation](https://plfa.github.io/Bisimulation/) | [link](./lecture-notes-Bisimulation.lagda.md) |
-|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](./lambda/)
+|          | 5 | [Untyped](https://plfa.github.io/Untyped/) Lambda Calculus and [BigStep](https://plfa.github.io/BigStep/) (CBN) | [link](https://github.com/jsiek/PLFA-Spring-2026/tree/main/lambda)
 |          | 10 | [Confluence](https://plfa.github.io/Confluence/) of the Lambda Calculus | [link](./lambda/FullBetaConfluence.agda)
 |          | 12  | Confluence continued |
 |          | 17  | Spring Break, no class |
