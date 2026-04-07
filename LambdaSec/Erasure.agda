@@ -354,7 +354,7 @@ mutual
 
 erase-[] : ∀ {A T ℓ₁ ℓ₂} {N : ∅ , A of ℓ₁ ⊢ᵉ T of ℓ₂} {V : ∅ ⊢ᵛ A of ℓ₁} {ζ}
     -----------------------------------------------------------------------------------------
-  → erase (N [ val V ]) ζ (ℓ₂ ⊑? ζ) ≡ (erase N ζ (ℓ₂ ⊑? ζ) [ eraseᵛ V ζ (ℓ₁ ⊑? ζ) ]ₑ)
+  → erase (N [ val V ]) ζ (ℓ₂ ⊑? ζ) ≡ erase N ζ (ℓ₂ ⊑? ζ) [ eraseᵛ V ζ (ℓ₁ ⊑? ζ) ]ₑ
 erase-[] {A = A} {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} {N = N} {V = V} {ζ = ζ} =
   trans (erase-substᵉ ((val V) • id) ζ N)
         (substₑ-cong erase-cons′ (erase N ζ (ℓ₂ ⊑? ζ)))
@@ -364,6 +364,7 @@ erase-[] {A = A} {ℓ₁ = ℓ₁} {ℓ₂ = ℓ₂} {N = N} {V = V} {ζ = ζ} =
   ... | yes _ = refl
   ... | no _ = refl
   erase-cons′ (S ())
+{-# REWRITE erase-[] #-}
 
 eraseᵛ-stamp-visible : ∀ {T ℓ₁ ζ} (V : ∅ ⊢ᵛ T of ℓ₁) (ℓ₂ : ℒ)
   → ℓ₂ ⊑ ζ
@@ -493,11 +494,7 @@ mutual
       (sym (eraseᵛ-stamp-visible V ℓ₃ vis))
       (⇓ₑ-app (subst (λ d → erase L ζ d ⇓ₑ ƛᵉ (erase N ζ (_ ⊑? ζ)) of ℓ₃) eq
                        (sim-lam-visible L⇓ƛ vis))
-               (sim M⇓W)
-               (subst
-                 (λ □ → □ ⇓ₑ eraseᵛ V ζ (_ ⊑? ζ))
-                 (erase-[] {N = N} {V = W} {ζ = ζ})
-                 (sim N[W]⇓V)))
+               (sim M⇓W) (sim N[W]⇓V))
   ... | no ¬vis with (ℓ₂ ⊔ ℓ₃) ⊑? ζ
   ...   | yes res = contradiction (⊑-trans ⊔-upper₂ res) ¬vis
   ...   | no _ =

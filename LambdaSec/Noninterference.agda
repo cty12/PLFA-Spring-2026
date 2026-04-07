@@ -2,18 +2,18 @@
 
 module LambdaSec.Noninterference where
 
+open import Function using (case_of_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
-
-import      LambdaSec.LogicalRelations as LR
-import      LambdaSec.Erasure as E
 open import LambdaSec.TwoPointLattice using (twoPointLattice; high; low)
 
 open import LambdaSec.LambdaSec twoPointLattice public
-module Fundamental = LR twoPointLattice
-module Erasure     = E  twoPointLattice
+open import LambdaSec.LogicalRelations twoPointLattice
+  using (fundamental; relSub; _of_⦂_≈ᵛ⦅_⦆_; _⊢_≈⦅_⦆_; ≈ᵛ→≈ᵉ)
+open import LambdaSec.Erasure twoPointLattice
+  using (erase; eraseᵛ; erase-[]; sim; _[_]ₑ; _⇓ₑ_; ⇓ₑ-deterministic)
 
 
-Noninterference : Set
+-- | The main security theorem: NI
 Noninterference =
   ∀ {T} {M : ∅ , T of high ⊢ᵉ `𝔹 of low}
         {V₁ V₂ : ∅ ⊢ᵛ T of high} {V₁′ V₂′ : ∅ ⊢ᵛ `𝔹 of low}
@@ -22,59 +22,27 @@ Noninterference =
       ---------------------------------
     → V₁′ ≡ V₂′
 
-noninterference-LR : Noninterference
+-- | Two flavors of the NI proof
+noninterference-LR noninterference-sim : Noninterference
+
+-- | The logical relations version of the proof
 noninterference-LR {T} {M} {V₁} {V₂} M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
-  Fundamental.fundamental M
-    (Fundamental.relSub ((val V₁) • id) ((val V₂) • id) σ₀-rel)
-    M[V₁]⇓V₁′ M[V₂]⇓V₂′ ⊑-refl
+  fundamental M (relSub ((val V₁) • id) ((val V₂) • id) σ₀-rel)
+              M[V₁]⇓V₁′ M[V₂]⇓V₂′ ⊑-refl
   where
-  high-rel : ∀ T′ {V W} → Fundamental._of_⦂_≈ᵛ⦅_⦆_ T′ high V low W
-  high-rel `𝔹                 = λ ()
-  high-rel (_ of _ ⇒ _ of _) = λ ()
+  σ₀-rel : ∅ , T of high ⊢ (val V₁) • id ≈⦅ low ⦆ (val V₂) • id
+  σ₀-rel Z = ≈ᵛ→≈ᵉ (high-rel T)
+    where
+    high-rel : ∀ T′ {V W} → T′ of high ⦂ V ≈ᵛ⦅ low ⦆ W
+    high-rel `𝔹                 = λ ()
+    high-rel (_ of _ ⇒ _ of _) = λ ()
 
-  σ₀-rel : Fundamental._⊢_≈⦅_⦆_ (∅ , T of high) ((val V₁) • id) low ((val V₂) • id)
-  σ₀-rel Z = Fundamental.≈ᵛ→≈ᵉ (high-rel T)
-  σ₀-rel (S ())
-
-noninterference-sim : Noninterference
-noninterference-sim {M = M} {V₁ = V₁} {V₂ = V₂}
-                    {V₁′ = $ b₁ of low} {V₂′ = $ b₂ of low}
-                    M[V₁]⇓V₁′ M[V₂]⇓V₂′
-  = go sim₁ sim₂
-  where
-  go : Erasure._⇓ₑ_
-         (Erasure._[_]ₑ
-           (Erasure.erase M low (low Erasure.⊑? low))
-           (Erasure.eraseᵛ V₁ low (high Erasure.⊑? low)))
-         (Erasure.eraseᵛ ($ b₁ of low) low (low Erasure.⊑? low))
-     → Erasure._⇓ₑ_
-         (Erasure._[_]ₑ
-           (Erasure.erase M low (low Erasure.⊑? low))
-           (Erasure.eraseᵛ V₂ low (high Erasure.⊑? low)))
-         (Erasure.eraseᵛ ($ b₂ of low) low (low Erasure.⊑? low))
-       ---------------------------------
-     → ($ b₁ of low) ≡ ($ b₂ of low)
-  go sim₁ sim₂ with Erasure.⇓ₑ-deterministic sim₁ sim₂
-  ... | refl = refl
-
-  sim₁ : Erasure._⇓ₑ_
-           (Erasure._[_]ₑ
-             (Erasure.erase M low (low Erasure.⊑? low))
-             (Erasure.eraseᵛ V₁ low (high Erasure.⊑? low)))
-           (Erasure.eraseᵛ ($ b₁ of low) low (low Erasure.⊑? low))
-  sim₁ = subst
-           (λ □ → Erasure._⇓ₑ_ □
-                     (Erasure.eraseᵛ ($ b₁ of low) low (low Erasure.⊑? low)))
-           (Erasure.erase-[] {N = M} {V = V₁} {ζ = low})
-           (Erasure.sim M[V₁]⇓V₁′)
-
-  sim₂ : Erasure._⇓ₑ_
-           (Erasure._[_]ₑ
-             (Erasure.erase M low (low Erasure.⊑? low))
-             (Erasure.eraseᵛ V₂ low (high Erasure.⊑? low)))
-           (Erasure.eraseᵛ ($ b₂ of low) low (low Erasure.⊑? low))
-  sim₂ = subst
-           (λ □ → Erasure._⇓ₑ_ □
-                     (Erasure.eraseᵛ ($ b₂ of low) low (low Erasure.⊑? low)))
-           (Erasure.erase-[] {N = M} {V = V₂} {ζ = low})
-           (Erasure.sim M[V₂]⇓V₂′)
+-- | The simulation version of the proof
+noninterference-sim {M = M} {V₁} {V₂} {V₁′ = $ b₁ of low} {V₂′ = $ b₂ of low}
+                    M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
+  let sim₁ : erase M low _ [ eraseᵛ V₁ low (high ⊑? low) ]ₑ ⇓ₑ
+               eraseᵛ ($ b₁ of low) low (low ⊑? low)
+      sim₁ = sim M[V₁]⇓V₁′
+      sim₂ = sim M[V₂]⇓V₂′ in
+  case ⇓ₑ-deterministic sim₁ sim₂ of λ where
+  refl → refl
