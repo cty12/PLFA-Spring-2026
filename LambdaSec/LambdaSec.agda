@@ -1,6 +1,7 @@
 {-# OPTIONS --rewriting #-}
 
-open import LambdaSec.LabelLattice using (LabelLattice; extensionality; cong₃)
+open import LambdaSec.LabelLattice using (LabelLattice)
+open import LambdaSec.Utils using (extensionality; cong₃)
 
 module LambdaSec.LambdaSec (𝑳 : LabelLattice) where
 
@@ -10,12 +11,11 @@ open import Relation.Nullary.Negation using (contradiction)
 open import Data.Bool using (Bool; true; false; _∧_; _∨_)
 open import Function using (case_of_)
 
--- Need the following two imports for rewriting
 open import Agda.Builtin.Equality
 open import Agda.Builtin.Equality.Rewrite
 
-
 open LabelLattice 𝑳 public
+
 
 infix 4 _⊑_ _⊑?_
 

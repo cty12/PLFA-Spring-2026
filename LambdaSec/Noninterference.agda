@@ -4,13 +4,13 @@ module LambdaSec.Noninterference where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
 
-import LambdaSec.LogicalRelations as LR
-import LambdaSec.Erasure as E
+import      LambdaSec.LogicalRelations as LR
+import      LambdaSec.Erasure as E
 open import LambdaSec.TwoPointLattice using (twoPointLattice; high; low)
 
 open import LambdaSec.LambdaSec twoPointLattice public
-module Fundamental = LR.λSec twoPointLattice
-module Erasure = E.λSec twoPointLattice
+module Fundamental = LR twoPointLattice
+module Erasure     = E  twoPointLattice
 
 
 Noninterference : Set
@@ -26,7 +26,7 @@ noninterference-LR : Noninterference
 noninterference-LR {T} {M} {V₁} {V₂} M[V₁]⇓V₁′ M[V₂]⇓V₂′ =
   Fundamental.fundamental M
     (Fundamental.relSub ((val V₁) • id) ((val V₂) • id) σ₀-rel)
-    M[V₁]⇓V₁′ M[V₂]⇓V₂′ Fundamental.⊑-refl
+    M[V₁]⇓V₁′ M[V₂]⇓V₂′ ⊑-refl
   where
   high-rel : ∀ T′ {V W} → Fundamental._of_⦂_≈ᵛ⦅_⦆_ T′ high V low W
   high-rel `𝔹                 = λ ()
