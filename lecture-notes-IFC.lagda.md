@@ -45,6 +45,28 @@ let input = priv-input () in
 The program is ill-typed, because `(neg input) : Bool of high`
 but `output` expects `Bool of low`, `high ⋤ low`.
 
+The IFC type system also rejects illegal implicit flow:
+
+```text
+priv-input : Unit -> Bool of high
+output     : Bool of low -> Unit
+
+let input = priv-input () in
+  output (if input then false else true)
+```
+
+The program is also ill-typed. The branch condition, `input`,
+has type `Bool of high`. As a result, the type of the if-expression
+`(if input then false else true)` is `Bool of high` despite
+the two branches (unannotated constants) being of `Bool of low`.
+We're going to define a "stamping" operator that models this implicit flow
+from the branch condition to the result of the entire if-expression.
+As we've said, `high ⋤ low`, so the call to `output` is ill-typed.
+
+# LambdaSec
+
+TBA
+
 # Security Guarantee: Noninterference
 
 The main security guarantee of LambdaSec is *noninterference*. Noninterference says that
